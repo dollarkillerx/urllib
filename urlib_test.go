@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"testing"
+	"time"
 )
 
 func TestLib(t *testing.T) {
@@ -35,5 +36,23 @@ func TestGet(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
+	post := Post("http://168.1xxxxx/cg")
+	post.Params("username", "root")
+	post.Params("password", "we")
+	body, err := post.Body()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(body.StatusCode)
+}
 
+func TestTimeOut(t *testing.T) {
+	bytes, err := Get("http://www.google.com").
+		HttpProxy("http://proxy.com").
+		SetTimeout(time.Second * 3).
+		Byte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(bytes)
 }

@@ -96,11 +96,6 @@ func Delete(url string) *urllib {
 	return base
 }
 
-func (u *urllib) SetTimeOut(timeout time.Duration) *urllib {
-	u.timeout = timeout
-	return u
-}
-
 func (u *urllib) SetUserAgent(ua string) *urllib {
 	u.req.Header.Set("User-Agent", ua)
 	return u
@@ -112,7 +107,7 @@ func (u *urllib) RandUserAgent() *urllib {
 }
 
 func (u *urllib) Params(key, val string) *urllib {
-	u.params.Set(key, val)
+	u.params.Add(key, val)
 	return u
 }
 
@@ -172,6 +167,7 @@ func (u *urllib) Body() (*http.Response, error) {
 		}
 		baseUrl = parse
 	case POST:
+		u.req.Method = string(POST)
 		u.setBodyBytes(u.params)
 		parse, err := url.Parse(u.url)
 		if err != nil {
