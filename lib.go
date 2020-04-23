@@ -1,7 +1,10 @@
 package urllib
 
 import (
+	"io/ioutil"
 	"math/rand"
+	"net/url"
+	"strings"
 	"time"
 )
 
@@ -26,4 +29,43 @@ func ReptileGetUserAgent() string {
 
 	intn := rand.Intn(len(userAgentList))
 	return userAgentList[intn]
+}
+
+// handle URL params
+func buildURLParams(userURL string, params url.Values) (string, error) {
+	parsedURL, err := url.Parse(userURL)
+
+	if err != nil {
+		return "", err
+	}
+
+	//parsedQuery, err := url.ParseQuery(parsedURL.RawQuery)
+	//
+	//if err != nil {
+	//	return "", nil
+	//}
+	//
+	//for _, param := range params {
+	//	for key, value := range param {
+	//		parsedQuery.Add(key, value)
+	//	}
+	//}
+	//
+	//encode := params.Encode()
+
+	return addQueryParams(parsedURL, params), nil
+}
+
+func addQueryParams(parsedURL *url.URL, parsedQuery url.Values) string {
+	if len(parsedQuery) > 0 {
+		return strings.Join([]string{strings.Replace(parsedURL.String(), "?"+parsedURL.RawQuery, "", -1), parsedQuery.Encode()}, "?")
+	}
+	return strings.Replace(parsedURL.String(), "?"+parsedURL.RawQuery, "", -1)
+}
+
+func (u *urllib) setBodyBytes(Forms url.Values) {
+	// maybe
+	data := Forms.Encode()
+	u.req.Body = ioutil.NopCloser(strings.NewReader(data))
+	u.req.ContentLength = int64(len(data))
 }
