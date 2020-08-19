@@ -1,6 +1,7 @@
 package urllib
 
 import (
+	"bytes"
 	"crypto/tls"
 	"fmt"
 	"io/ioutil"
@@ -8,19 +9,49 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"time"
 )
 
 type urlType string
 
 const (
-	UA = "UrlLib By DollarKillerx"
+	UA = "DollarKiller-UrlLib2.0"
 
-	GET    urlType = "GET"
-	POST   urlType = "POST"
-	PUT    urlType = "PUT"
-	DELETE urlType = "DELETE"
+	get    urlType = "GET"
+	post   urlType = "POST"
+	put    urlType = "PUT"
+	delete urlType = "DELETE"
 )
+
+func Get(url string) *urllib {
+	base := getBase()
+	base.url = url
+	base.typ = get
+	return base
+}
+
+func Post(url string) *urllib {
+	base := getBase()
+	base.url = url
+	base.typ = post
+	base.req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	return base
+}
+
+func Put(url string) *urllib {
+	base := getBase()
+	base.url = url
+	base.typ = put
+	return base
+}
+
+func Delete(url string) *urllib {
+	base := getBase()
+	base.url = url
+	base.typ = delete
+	return base
+}
 
 type urllib struct {
 	url     string
@@ -37,6 +68,8 @@ type urllib struct {
 	cookies []*http.Cookie
 
 	client *http.Client
+
+	jsonBody []byte
 }
 
 func getBase() *urllib {
@@ -56,7 +89,7 @@ func getBase() *urllib {
 	base.client.Jar = jar
 
 	base.req = &http.Request{
-		Method:     string(GET),
+		Method:     string(get),
 		Header:     make(http.Header),
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
@@ -64,35 +97,6 @@ func getBase() *urllib {
 	}
 
 	base.req.Header.Set("User-Agent", UA)
-	return base
-}
-
-func Get(url string) *urllib {
-	base := getBase()
-	base.url = url
-	base.typ = GET
-	return base
-}
-
-func Post(url string) *urllib {
-	base := getBase()
-	base.url = url
-	base.typ = POST
-	base.req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	return base
-}
-
-func Put(url string) *urllib {
-	base := getBase()
-	base.url = url
-	base.typ = PUT
-	return base
-}
-
-func Delete(url string) *urllib {
-	base := getBase()
-	base.url = url
-	base.typ = DELETE
 	return base
 }
 
@@ -106,8 +110,21 @@ func (u *urllib) RandUserAgent() *urllib {
 	return u
 }
 
+func (u *urllib) SetJson(body []byte) *urllib {
+	u.SetHeader("Content-Type", "application/json;charset=UTF-8")
+	u.jsonBody = body
+	return u
+}
+
 func (u *urllib) Params(key, val string) *urllib {
 	u.params.Add(key, val)
+	return u
+}
+
+func (u *urllib) ParamsMap(data map[string]string) *urllib {
+	for k, v := range data {
+		u.params.Add(k, v)
+	}
 	return u
 }
 
@@ -118,6 +135,13 @@ func (u *urllib) SetCookie(cookies []*http.Cookie) *urllib {
 
 func (u *urllib) SetHeader(k, v string) *urllib {
 	u.header[k] = v
+	return u
+}
+
+func (u *urllib) SetHeaderMap(headMap map[string]string) *urllib {
+	for k, v := range headMap {
+		u.header[k] = v
+	}
 	return u
 }
 
@@ -138,8 +162,6 @@ func (u *urllib) ClearCookies() {
 
 func (u *urllib) clientSetCookies() {
 	if len(u.cookies) > 0 {
-		// 1. Cookies have content, Copy Cookies to Client.jar
-		// 2. Clear  Cookies
 		u.client.Jar.SetCookies(u.req.URL, u.cookies)
 		u.ClearCookies()
 	}
@@ -151,23 +173,29 @@ func (u *urllib) SetAuth(user, password string) *urllib {
 }
 
 func (u *urllib) SetTimeout(n time.Duration) *urllib {
+	if n < 10 {
+		n = n * time.Second
+	}
 	u.client.Timeout = n
 	return u
 }
 
-func (u *urllib) Body() (*http.Response, error) {
-	delete(u.req.Header, "Cookie")
+func (u *urllib) body() (*http.Response, error) {
+	//Delete(u.req.Header, "Cookie")
 	var baseUrl *url.URL
 	switch u.typ {
-	case GET:
-		disturl, _ := buildURLParams(u.url, u.params)
+	case get:
+		disturl, err := buildURLParams(u.url, u.params)
+		if err != nil {
+			return nil, err
+		}
 		parse, err := url.Parse(disturl)
 		if err != nil {
 			return nil, err
 		}
 		baseUrl = parse
-	case POST:
-		u.req.Method = string(POST)
+	case post:
+		u.req.Method = string(post)
 		u.setBodyBytes(u.params)
 		parse, err := url.Parse(u.url)
 		if err != nil {
@@ -175,12 +203,20 @@ func (u *urllib) Body() (*http.Response, error) {
 		}
 		baseUrl = parse
 	}
+	// set json
+	if u.header["Content-Type"] == "application/json;charset=UTF-8" {
+		request, err := http.NewRequest("POST", u.url, bytes.NewBuffer(u.jsonBody))
+		if err != nil {
+			return nil, err
+		}
+		u.req = request
+	}
 
 	u.req.URL = baseUrl
 	u.clientSetCookies()
 
 	for k, v := range u.header {
-		u.req.Header.Set(k, v)
+		u.req.Header.Add(k, v)
 	}
 
 	if u.httpProxy != "" {
@@ -203,11 +239,53 @@ func (u *urllib) Body() (*http.Response, error) {
 	return u.client.Do(u.req)
 }
 
-func (u *urllib) Byte() ([]byte, error) {
-	body, err := u.Body()
+func (u *urllib) byte() (int, []byte, error) {
+	body, err := u.body()
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	defer body.Body.Close()
-	return ioutil.ReadAll(body.Body)
+	all, err := ioutil.ReadAll(body.Body)
+	return body.StatusCode, all, err
+}
+
+func (u *urllib) setBodyBytes(Forms url.Values) {
+	data := Forms.Encode()
+	u.req.Body = ioutil.NopCloser(strings.NewReader(data))
+	u.req.ContentLength = int64(len(data))
+}
+
+func (u *urllib) Body() (*http.Response, error) {
+	return u.body()
+}
+func (u *urllib) Byte() (int, []byte, error) {
+	return u.byte()
+}
+
+// 拥有重尝 版本
+func (u *urllib) BodyRetry(retry int) (body *http.Response, err error) {
+	for i := 0; i < retry; i++ {
+		body, err = u.body()
+		if err != nil {
+			time.Sleep(time.Second * time.Duration(random(1, 5)))
+			continue
+		}
+		return body, err
+	}
+	return body, err
+}
+
+func (u *urllib) ByteRetry(retry int) (statusCode int, body []byte, err error) {
+	if retry == 0 {
+		retry = 3
+	}
+	for i := 0; i < retry; i++ {
+		statusCode, body, err = u.byte()
+		if err != nil {
+			time.Sleep(time.Second * time.Duration(random(1, 5)))
+			continue
+		}
+		return statusCode, body, err
+	}
+	return statusCode, body, err
 }

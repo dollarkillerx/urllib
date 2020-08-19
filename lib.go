@@ -1,7 +1,6 @@
 package urllib
 
 import (
-	"io/ioutil"
 	"math/rand"
 	"net/url"
 	"strings"
@@ -63,9 +62,14 @@ func addQueryParams(parsedURL *url.URL, parsedQuery url.Values) string {
 	return strings.Replace(parsedURL.String(), "?"+parsedURL.RawQuery, "", -1)
 }
 
-func (u *urllib) setBodyBytes(Forms url.Values) {
-	// maybe
-	data := Forms.Encode()
-	u.req.Body = ioutil.NopCloser(strings.NewReader(data))
-	u.req.ContentLength = int64(len(data))
+//func (u *urllib) setBodyBytes(Forms url.Values) {
+//	// maybe
+//	data := Forms.Encode()
+//	u.req.Body = ioutil.NopCloser(strings.NewReader(data))
+//	u.req.ContentLength = int64(len(data))
+//}
+
+func random(min, max int) int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(max-min) + min
 }
