@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/url"
 	"testing"
-	"time"
 )
 
 func TestLib(t *testing.T) {
@@ -28,11 +27,11 @@ func TestGet(t *testing.T) {
 	}
 	fmt.Println(body.StatusCode)
 
-	bod, err := Get("http://www.baidu.com").Byte()
-	if err != nil {
-		log.Fatalln(err)
-	}
-	fmt.Println(string(bod))
+	//bod, err := Get("http://www.baidu.com").Byte()
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+	//fmt.Println(string(bod))
 }
 
 func TestPost(t *testing.T) {
@@ -47,12 +46,21 @@ func TestPost(t *testing.T) {
 }
 
 func TestTimeOut(t *testing.T) {
-	bytes, err := Get("http://www.google.com").
-		HttpProxy("http://proxy.com").
-		SetTimeout(time.Second * 3).
-		Byte()
+	//bytes, err := Get("http://www.google.com").
+	//	HttpProxy("http://proxy.com").
+	//	SetTimeout(time.Second * 3).
+	//	Byte()
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+	//fmt.Println(bytes)
+}
+
+func TestGetQuery(t *testing.T) {
+	retry, body, err := Get("http://192.168.89.56:8080/assets").Params("url", "test.com/2.html").Params("url", "test.com/1.html").ByteRetry(3)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println(bytes)
+	fmt.Println(retry)
+	fmt.Println(string(body))
 }
