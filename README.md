@@ -7,7 +7,7 @@ go get github.com/dollarkillerx/urllib
 ```
 ### Use
 - 简单操作
-```
+```go
 Get("http://www.baidu.com").Body()
 
 Get("http://www.baidu.com").
@@ -20,13 +20,13 @@ post := Post("http://168.1xxxxx/cg")
 	body, err := post.Body()
 ```
 - send json
-``` 
+```go
 Post("http://168.1xxxxx/cg").
     SetJson(marshal).   // send json
     ByteRetry(3)        // 设置获取Byte模式重试次数3
 ```
 - 设置代理
-``` 
+```go
 	bytes, err := Get("http://www.google.com").
 		HttpProxy("http://proxy.com").
 		SetTimeout(time.Second * 3).
@@ -37,7 +37,7 @@ Post("http://168.1xxxxx/cg").
 	fmt.Println(bytes)
 ```
 - set timeout
-```` 
+````go
 	bytes, err := Get("http://www.google.com").SetTimeout(time.Second * 3).Byte()
 	if err != nil {
 		log.Fatalln(err)
