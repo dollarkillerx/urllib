@@ -20,8 +20,8 @@ go get github.com/dollarkillerx/urllib
 - GET & Query
 ```go
 	httpCode, bytes, err = urllib.Get("http://www.baidu.com").
-		Query("q","122").
-		Query("h","1213").Byte()   // 生成URL： http://www.baidu.com?q=122&h=1213
+		Queries("q","122").
+		Queries("h","1213").Byte()   // 生成URL： http://www.baidu.com?q=122&h=1213
 ```
 - POST FROM 
 ```go

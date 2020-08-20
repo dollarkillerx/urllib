@@ -64,7 +64,7 @@ type urllib struct {
 	resp      *http.Response
 
 	params  url.Values
-	query  url.Values
+	querys  url.Values
 	header  map[string]string
 	cookies []*http.Cookie
 
@@ -82,6 +82,7 @@ func getBase() *urllib {
 	base := &urllib{
 		timeout: time.Second * 3,
 		params:  map[string][]string{},
+		querys:  map[string][]string{},
 		header:  map[string]string{},
 		cookies: []*http.Cookie{},
 		client:  &http.Client{},
@@ -122,8 +123,8 @@ func (u *urllib) Params(key, val string) *urllib {
 	return u
 }
 
-func (u *urllib) Query(key, val string) *urllib {
-	u.query.Add(key, val)
+func (u *urllib) Queries(key, val string) *urllib {
+	u.querys.Add(key, val)
 	return u
 }
 
@@ -134,9 +135,9 @@ func (u *urllib) ParamsMap(data map[string]string) *urllib {
 	return u
 }
 
-func (u *urllib) QueryMap(data map[string]string) *urllib {
+func (u *urllib) QueriesMap(data map[string]string) *urllib {
 	for k, v := range data {
-		u.query.Add(k, v)
+		u.querys.Add(k, v)
 	}
 	return u
 }
@@ -195,9 +196,9 @@ func (u *urllib) SetTimeout(n time.Duration) *urllib {
 
 func (u *urllib) body() (*http.Response, error) {
 	var baseUrl *url.URL
-	// query ?xx=xx&xx=xx
+	// querys ?xx=xx&xx=xx
 	u.setBodyBytes(u.params)
-	disturl, err := buildURLParams(u.url, u.query)
+	disturl, err := buildURLParams(u.url, u.querys)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +207,7 @@ func (u *urllib) body() (*http.Response, error) {
 		return nil, err
 	}
 	baseUrl = parse
-	// query end
+	// querys end
 
 	switch u.typ {
 	case get:
