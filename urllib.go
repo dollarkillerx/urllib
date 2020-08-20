@@ -64,6 +64,7 @@ type urllib struct {
 	resp      *http.Response
 
 	params  url.Values
+	query  url.Values
 	header  map[string]string
 	cookies []*http.Cookie
 
@@ -121,9 +122,21 @@ func (u *urllib) Params(key, val string) *urllib {
 	return u
 }
 
+func (u *urllib) Query(key, val string) *urllib {
+	u.query.Add(key, val)
+	return u
+}
+
 func (u *urllib) ParamsMap(data map[string]string) *urllib {
 	for k, v := range data {
 		u.params.Add(k, v)
+	}
+	return u
+}
+
+func (u *urllib) QueryMap(data map[string]string) *urllib {
+	for k, v := range data {
+		u.query.Add(k, v)
 	}
 	return u
 }
@@ -181,28 +194,31 @@ func (u *urllib) SetTimeout(n time.Duration) *urllib {
 }
 
 func (u *urllib) body() (*http.Response, error) {
-	//Delete(u.req.Header, "Cookie")
 	var baseUrl *url.URL
+	// query ?xx=xx&xx=xx
+	u.setBodyBytes(u.params)
+	disturl, err := buildURLParams(u.url, u.query)
+	if err != nil {
+		return nil, err
+	}
+	parse, err := url.Parse(disturl)
+	if err != nil {
+		return nil, err
+	}
+	baseUrl = parse
+	// query end
+
 	switch u.typ {
 	case get:
-		disturl, err := buildURLParams(u.url, u.params)
-		if err != nil {
-			return nil, err
-		}
-		parse, err := url.Parse(disturl)
-		if err != nil {
-			return nil, err
-		}
-		baseUrl = parse
+		u.req.Method = string(get)
 	case post:
 		u.req.Method = string(post)
-		u.setBodyBytes(u.params)
-		parse, err := url.Parse(u.url)
-		if err != nil {
-			return nil, err
-		}
-		baseUrl = parse
+	case put:
+		u.req.Method = string(put)
+	case delete:
+		u.req.Method = string(delete)
 	}
+
 	// set json
 	if u.header["Content-Type"] == "application/json;charset=UTF-8" {
 		request, err := http.NewRequest("POST", u.url, bytes.NewBuffer(u.jsonBody))

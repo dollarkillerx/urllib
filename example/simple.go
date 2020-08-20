@@ -1,13 +1,12 @@
-# urllib
-golang urllib Simple HTTP Client
+package main
 
-### Install
-```
-go get github.com/dollarkillerx/urllib
-```
-### Use
-- GET
-```go
+import (
+	"fmt"
+	"github.com/dollarkillerx/urllib"
+	"log"
+)
+
+func main() {
 	// get
 	httpCode, bytes, err := urllib.Get("http://www.baidu.com").Byte()
 	if err != nil {
@@ -16,59 +15,73 @@ go get github.com/dollarkillerx/urllib
 
 	log.Printf("HttpCode: %d \n", httpCode)
 	fmt.Println(string(bytes))
-```
-- GET & Query
-```go
+
+
 	httpCode, bytes, err = urllib.Get("http://www.baidu.com").
 		Query("q","122").
 		Query("h","1213").Byte()   // 生成URL： http://www.baidu.com?q=122&h=1213
-```
-- POST FROM 
-```go
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("HttpCode: %d \n", httpCode)
+	fmt.Println(string(bytes))
+
+
 	httpCode, bytes, err = urllib.Post("http://www.baidu.com").
 		Params("q","122").
 		Params("h","1213").Byte()   // URL： http://www.baidu.com  表单 q=122 h=1213
-```
-- POST JSON
-```go
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("HttpCode: %d \n", httpCode)
+	fmt.Println(string(bytes))
+
 	httpCode, bytes, err = urllib.Post("http://www.baidu.com").
-		SetJson([]byte(`{"MSG":"121321"}`)).Byte()   
-```
-- PUT & DELETE
-```go 
-	httpCode, bytes, err = urllib.Delete("http://www.baidu.com").Byte()   
-	httpCode, bytes, err = urllib.Put("http://www.baidu.com").Byte()   
-```
-- 设置代理
-```go
+		SetJson([]byte(`{"MSG":"121321"}`)).Byte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("HttpCode: %d \n", httpCode)
+	fmt.Println(string(bytes))
+
+
 	httpCode, bytes, err = urllib.Post("http://www.baidu.com").HttpProxy("http://xxxx.c").Byte()
-```
-- set timeout
-````go
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("HttpCode: %d \n", httpCode)
+	fmt.Println(string(bytes))
+
 	httpCode, bytes, err = urllib.Post("http://www.baidu.com").SetTimeout(3).Byte()
-````
-- 设置重试次数
-```go 
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("HttpCode: %d \n", httpCode)
+	fmt.Println(string(bytes))
+
+
 	httpCode, bytes, err = urllib.Delete("http://www.baidu.com").ByteRetry(3)
-```
-- set Header & 返回方式Body
-```go
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	log.Printf("HttpCode: %d \n", httpCode)
+	fmt.Println(string(bytes))
+
 	body, err := urllib.Post("http://www.baidu.com").
 		SetHeader("xxx", "xxx").
 		SetHeader("xxx", "xxx").Body()
 	defer body.Body.Close()
-```
-- Auth
-```go 
+
 	urllib.Post("http://www.baidu.com").SetAuth("user","passwd").Body()
-```
-- 自定义UserAgent & 随即 UserAgent
-```go
+
 	urllib.Post("http://www.baidu.com").SetUserAgent("chrome").Body()
 	urllib.Post("http://www.baidu.com").RandUserAgent().Body()
-```
-- Set Cookie
-```go
-	urllib.Post("http://www.baidu.com").SetCookie().Body()
-```
 
+	//urllib.Post("http://www.baidu.com").SetCookie().Body()
+}
