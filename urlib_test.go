@@ -2,7 +2,9 @@ package urllib
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"testing"
 )
@@ -63,4 +65,48 @@ func TestGetQuery(t *testing.T) {
 	}
 	fmt.Println(retry)
 	fmt.Println(string(body))
+}
+
+
+func TestAutomaticTranscoding(t *testing.T) {
+	i, bytes, err := Get("https://www.discuz.net/forum.php").Byte()  // gbk
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(string(bytes))
+	fmt.Println(i)
+
+	i, bytes, err = Get("http://www.phome.net/").Byte()             // 无标注
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fmt.Println(string(bytes))
+	fmt.Println(i)
+}
+
+func TestPost2(t *testing.T) {
+	body, err := Get("http://127.0.0.1:8082/").Body()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer body.Body.Close()
+	all, err := ioutil.ReadAll(body.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(string(all))
+
+	fmt.Println(body.StatusCode)
+
+	resp, err := http.Get("http://127.0.0.1:8082/")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer resp.Body.Close()
+	readAll, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(string(readAll))
+	log.Println(resp.StatusCode)
 }
