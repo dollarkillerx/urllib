@@ -88,6 +88,7 @@ func getBase() *urllib {
 		client:  &http.Client{},
 	}
 
+	base.client.Timeout = time.Second * 3
 	base.client.Jar = jar
 
 	base.req = &http.Request{
