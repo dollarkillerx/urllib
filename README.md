@@ -75,4 +75,7 @@ go get github.com/dollarkillerx/urllib
 ```go
 	urllib.Post("http://www.baidu.com").SetCookie().Body()
 ```
-
+- 禁止自动重定向
+```go
+urllib.Get("http://www.baidu.com").NoRedirect().Body()
+```

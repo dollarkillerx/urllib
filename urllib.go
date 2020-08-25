@@ -278,6 +278,13 @@ func (u *urllib) setBodyBytes(Forms url.Values) {
 	u.req.ContentLength = int64(len(data))
 }
 
+func (u *urllib) NoRedirect() *urllib {
+	u.client.CheckRedirect = func(req *http.Request, via []*http.Request) error { // 定制禁用跳转
+		return http.ErrUseLastResponse
+	}
+	return u
+}
+
 func (u *urllib) Body() (*http.Response, error) {
 	return u.body()
 }
