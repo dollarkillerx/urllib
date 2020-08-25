@@ -263,6 +263,11 @@ func (u *urllib) byte() (int, []byte, error) {
 	}
 	defer body.Body.Close()
 	all, err := ioutil.ReadAll(body.Body)
+	if err != nil {
+		return 0, all, err
+	}
+	contentType := body.Header.Get("Content-Type")
+	all, err = AutomaticTranscoding(contentType, all)
 	return body.StatusCode, all, err
 }
 

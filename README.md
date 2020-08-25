@@ -1,6 +1,10 @@
 # urllib
 golang urllib Simple HTTP Client
 
+### characteristic
+- simple http client 
+- automatic transcoding utf-8
+
 ### Install
 ```
 go get github.com/dollarkillerx/urllib
