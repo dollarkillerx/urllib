@@ -254,6 +254,7 @@ func (u *urllib) body() (*http.Response, error) {
 		}
 	}
 
+	log.Println(u.req.URL.String())
 	return u.client.Do(u.req)
 }
 

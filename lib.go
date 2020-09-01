@@ -108,7 +108,7 @@ func addQueryParams(parsedURL *url.URL, parsedQuery url.Values) string {
 	if len(parsedQuery) > 0 {
 		return strings.Join([]string{strings.Replace(parsedURL.String(), "?"+parsedURL.RawQuery, "", -1), parsedQuery.Encode()}, "?")
 	}
-	return strings.Replace(parsedURL.String(), "?"+parsedURL.RawQuery, "", -1)
+	return parsedURL.String()
 }
 
 //func (u *urllib) setBodyBytes(Forms url.Values) {
