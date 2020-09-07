@@ -2,6 +2,8 @@ package urllib
 
 import (
 	"bytes"
+	"compress/gzip"
+	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/url"
@@ -142,4 +144,46 @@ func AutomaticTranscoding(contentType string, data []byte) (result []byte, err e
 		return nil, err
 	}
 	return ioutil.ReadAll(reader)
+}
+
+func UnGzipData(data []byte) (resData []byte, err error) {
+	b := bytes.NewBuffer(data)
+
+	var r io.Reader
+	r, err = gzip.NewReader(b)
+	if err != nil {
+		return
+	}
+
+	var resB bytes.Buffer
+	_, err = resB.ReadFrom(r)
+	if err != nil {
+		return
+	}
+
+	resData = resB.Bytes()
+
+	return
+}
+
+func GZipData(data []byte) (compressedData []byte, err error) {
+	var b bytes.Buffer
+	gz := gzip.NewWriter(&b)
+
+	_, err = gz.Write(data)
+	if err != nil {
+		return
+	}
+
+	if err = gz.Flush(); err != nil {
+		return
+	}
+
+	if err = gz.Close(); err != nil {
+		return
+	}
+
+	compressedData = b.Bytes()
+
+	return
 }

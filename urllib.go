@@ -70,7 +70,7 @@ type urllib struct {
 
 	client *http.Client
 
-	jsonBody []byte
+	bodyByte []byte
 }
 
 func getBase() *urllib {
@@ -115,7 +115,7 @@ func (u *urllib) RandUserAgent() *urllib {
 
 func (u *urllib) SetJson(body []byte) *urllib {
 	u.SetHeader("Content-Type", "application/json;charset=UTF-8")
-	u.jsonBody = body
+	u.bodyByte = body
 	return u
 }
 
@@ -195,6 +195,16 @@ func (u *urllib) SetTimeout(n time.Duration) *urllib {
 	return u
 }
 
+func (u *urllib) SetGzip() *urllib {
+	u.SetHeader("Content-Encoding", "gzip")
+	return u
+}
+
+func (u *urllib) SetBody(body []byte) *urllib {
+	u.bodyByte = body
+	return u
+}
+
 func (u *urllib) body() (*http.Response, error) {
 	var baseUrl *url.URL
 	// querys ?xx=xx&xx=xx
@@ -221,9 +231,18 @@ func (u *urllib) body() (*http.Response, error) {
 		u.req.Method = string(delete)
 	}
 
+	// gip
+	if u.header["Content-Encoding"] == "gzip" {
+		data, err := GZipData(u.bodyByte)
+		if err != nil {
+			return nil, err
+		}
+		u.bodyByte = data
+	}
+
 	// set json
 	if u.header["Content-Type"] == "application/json;charset=UTF-8" {
-		request, err := http.NewRequest("POST", u.url, bytes.NewBuffer(u.jsonBody))
+		request, err := http.NewRequest("POST", u.url, bytes.NewBuffer(u.bodyByte))
 		if err != nil {
 			return nil, err
 		}
