@@ -405,6 +405,9 @@ func (u *Urllib) body() (*http.Response, error) {
 		client.CheckRedirect = u.config.CheckRedirect
 	}
 
+	if u.err != nil {
+		return nil, u.err
+	}
 	return client.Do(u.req)
 }
 
