@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/url"
 	"strings"
 	"time"
@@ -186,4 +187,15 @@ func GZipData(data []byte) (compressedData []byte, err error) {
 	compressedData = b.Bytes()
 
 	return
+}
+
+func setTimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
+	return func(netw, addr string) (net.Conn, error) {
+		conn, err := net.DialTimeout(netw, addr, cTimeout)
+		if err != nil {
+			return nil, err
+		}
+		err = conn.SetDeadline(time.Now().Add(rwTimeout))
+		return conn, err
+	}
 }
