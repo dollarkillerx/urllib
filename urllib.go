@@ -2,21 +2,15 @@ package urllib
 
 import (
 	"bytes"
-	"io"
-	"log"
-	"os"
-	"strings"
-	"sync"
-	"time"
-
 	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
-	"mime/multipart"
 	"net/http"
-	"net/http/cookiejar"
 	"net/url"
+	"time"
+
+	"github.com/valyala/fasthttp"
 )
 
 func Get(url string) *Urllib {
@@ -43,11 +37,10 @@ func Head(url string) *Urllib {
 type Urllib struct {
 	url string
 
-	req  *http.Request
-	resp *http.Response
-
-	params url.Values
+	method string
+	params *fasthttp.Args
 	querys url.Values
+	header map[string]string
 
 	data   []byte
 	files  map[string]string
@@ -57,44 +50,31 @@ type Urllib struct {
 }
 
 type Config struct {
-	UserAgent        string
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-	TLSClientConfig  *tls.Config
-	Proxy            func(*http.Request) (*url.URL, error)
-	Transport        http.RoundTripper
-	CheckRedirect    func(req *http.Request, via []*http.Request) error
-	Gzip             bool
+	UserAgent       string
+	Timeout         time.Duration
+	TLSClientConfig *tls.Config
+	Redirect        int // 最大跳转次数
+	Gzip            bool
 }
 
 var defaultConfig = Config{
-	UserAgent:        "Urllib Gold",
-	ConnectTimeout:   30 * time.Second,
-	ReadWriteTimeout: 30 * time.Second,
-	Gzip:             false,
+	UserAgent:       "Urllib Gold FastHttp",
+	Timeout:         30 * time.Second,
+	Redirect:        3,
+	Gzip:            false,
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
 }
 
 func getBase(tagUrl, method string) *Urllib {
-	var resp http.Response
-	u, err := url.Parse(tagUrl)
-
 	base := &Urllib{
-		params: map[string][]string{},
+		params: &fasthttp.Args{},
 		querys: map[string][]string{},
 		files:  map[string]string{},
+		header: map[string]string{},
 		url:    tagUrl,
-		err:    err,
+		err:    nil,
 		config: defaultConfig,
-		resp:   &resp,
-	}
-
-	base.req = &http.Request{
-		URL:        u,
-		Method:     method,
-		Header:     make(http.Header),
-		Proto:      "HTTP/1.1",
-		ProtoMajor: 1,
-		ProtoMinor: 1,
+		method: method,
 	}
 
 	base.SetUserAgent(base.config.UserAgent)
@@ -118,29 +98,24 @@ func (u *Urllib) SetConfig(config Config) *Urllib {
 }
 
 func (u *Urllib) SetHeader(k, v string) *Urllib {
-	u.req.Header.Set(k, v)
+	u.header[k] = v
 	return u
 }
 
 func (u *Urllib) SetHeaderMap(headMap map[string]string) *Urllib {
 	for k, v := range headMap {
-		u.req.Header.Set(k, v)
+		u.header[k] = v
 	}
 	return u
 }
 
-func (u *Urllib) SetHost(host string) *Urllib {
-	u.req.Host = host
-	return u
-}
-
 func (u *Urllib) SetUserAgent(ua string) *Urllib {
-	u.req.Header.Set("User-Agent", ua)
+	u.config.UserAgent = ua
 	return u
 }
 
 func (u *Urllib) RandUserAgent() *Urllib {
-	u.req.Header.Set("User-Agent", ReptileGetUserAgent())
+	u.config.UserAgent = ReptileGetUserAgent()
 	return u
 }
 
@@ -172,24 +147,7 @@ func (u *Urllib) SetTimeout(timeout time.Duration) *Urllib {
 	if timeout < 10 {
 		timeout = timeout * time.Second
 	}
-	u.config.ConnectTimeout = timeout
-	u.config.ReadWriteTimeout = timeout
-	return u
-}
-
-func (u *Urllib) SetConnectTimeout(timeout time.Duration) *Urllib {
-	if timeout < 10 {
-		timeout = timeout * time.Second
-	}
-	u.config.ConnectTimeout = timeout
-	return u
-}
-
-func (u *Urllib) SetReadWriteTimeout(timeout time.Duration) *Urllib {
-	if timeout < 10 {
-		timeout = timeout * time.Second
-	}
-	u.config.ReadWriteTimeout = timeout
+	u.config.Timeout = timeout
 	return u
 }
 
@@ -198,53 +156,52 @@ func (u *Urllib) SetTLSClientConfig(config *tls.Config) *Urllib {
 	return u
 }
 
-func (u *Urllib) SetHTTPVersion(version string) *Urllib {
-	major, minor, ok := http.ParseHTTPVersion(version)
-	if ok {
-		u.req.Proto = version
-		u.req.ProtoMajor = major
-		u.req.ProtoMinor = minor
-	}
+//func (u *Urllib) SetHTTPVersion(version string) *Urllib {
+//	major, minor, ok := http.ParseHTTPVersion(version)
+//	if ok {
+//		u.req.Proto = version
+//		u.req.ProtoMajor = major
+//		u.req.ProtoMinor = minor
+//	}
+//
+//	return u
+//}
+//
+//func (u *Urllib) SetCookie(cookie *http.Cookie) *Urllib {
+//	u.req.Header.Add("Cookie", cookie.String())
+//	return u
+//}
+//
+//func (u *Urllib) SetTransport(transport http.RoundTripper) *Urllib {
+//	u.config.Transport = transport
+//	return u
+//}
+//
+//func (u *Urllib) SetCheckRedirect(redirect func(req *http.Request, via []*http.Request) error) *Urllib {
+//	u.config.CheckRedirect = redirect
+//	return u
+//}
+//
+//func (u *Urllib) SetAuth(user, password string) *Urllib {
+//	u.req.SetBasicAuth(user, password)
+//	return u
+//}
+//
+//func (u *Urllib) SetProxy(proxy func(*http.Request) (*url.URL, error)) *Urllib {
+//	u.config.Proxy = proxy
+//	return u
+//}
+//
+//func (u *Urllib) PostFile(fromKey, filePath string) *Urllib {
+//	u.files[fromKey] = filePath
+//	return u
+//}
 
-	return u
-}
-
-func (u *Urllib) SetCookie(cookie *http.Cookie) *Urllib {
-	u.req.Header.Add("Cookie", cookie.String())
-	return u
-}
-
-func (u *Urllib) SetTransport(transport http.RoundTripper) *Urllib {
-	u.config.Transport = transport
-	return u
-}
-
-func (u *Urllib) SetCheckRedirect(redirect func(req *http.Request, via []*http.Request) error) *Urllib {
-	u.config.CheckRedirect = redirect
-	return u
-}
-
-func (u *Urllib) SetAuth(user, password string) *Urllib {
-	u.req.SetBasicAuth(user, password)
-	return u
-}
-
-func (u *Urllib) SetProxy(proxy func(*http.Request) (*url.URL, error)) *Urllib {
-	u.config.Proxy = proxy
-	return u
-}
-
-func (u *Urllib) PostFile(fromKey, filePath string) *Urllib {
-	u.files[fromKey] = filePath
-	return u
-}
-
-func (u *Urllib) setBody() {
-	if len(u.data) != 0 {
-		u.req.Body = ioutil.NopCloser(bytes.NewBuffer(u.data))
-		u.req.ContentLength = int64(len(u.data))
-	}
-}
+//func (u *Urllib) setBody() {
+//	if len(u.data) != 0 {
+//		u.data = ioutil.NopCloser(bytes.NewBuffer(u.data))
+//	}
+//}
 
 func (u *Urllib) SetBody(body []byte) *Urllib {
 	u.data = body
@@ -254,7 +211,7 @@ func (u *Urllib) SetBody(body []byte) *Urllib {
 func (u *Urllib) SetJson(body []byte) *Urllib {
 	if body != nil {
 		u.data = body
-		u.req.Header.Set("Content-Type", "application/json")
+		u.header["Content-Type"] = "application/json"
 	}
 	return u
 }
@@ -267,50 +224,36 @@ func (u *Urllib) SetJsonObject(obj interface{}) *Urllib {
 			return u
 		}
 		u.data = body
-		u.req.Header.Set("Content-Type", "application/json")
+		u.header["Content-Type"] = "application/json"
 	}
 	return u
 }
 
 // if form
-func (u *Urllib) setFormParams(Forms url.Values) {
-	data := Forms.Encode()
-	u.req.Body = ioutil.NopCloser(strings.NewReader(data))
-	u.req.ContentLength = int64(len(data))
-}
+//func (u *Urllib) setFormParams(Forms url.Values) {
+//	data := Forms.Encode()
+//	u.req.Body = ioutil.NopCloser(strings.NewReader(data))
+//	u.req.ContentLength = int64(len(data))
+//}
 
 func (u *Urllib) setGzip() *Urllib {
-	if u.req.Body == nil {
+	if u.data == nil || len(u.data) == 0 {
 		return u
 	}
 
-	if u.req.Body == nil {
-		return u
-	}
-	all, err := ioutil.ReadAll(u.req.Body)
-	if err != nil {
-		u.err = err
-		return u
-	}
-	if len(all) == 0 {
-		return u
-	}
-	data, err := GZipData(all)
+	data, err := GZipData(u.data)
 	if err != nil {
 		u.err = err
 		return u
 	}
 
 	u.SetHeader("Content-Encoding", "gzip")
-	u.req.Body = ioutil.NopCloser(bytes.NewReader(data))
-	u.req.ContentLength = int64(len(data))
+	u.data = data
 	return u
 }
 
 func (u *Urllib) NoRedirect() *Urllib {
-	u.config.CheckRedirect = func(req *http.Request, via []*http.Request) error { // 定制禁用跳转
-		return http.ErrUseLastResponse
-	}
+	u.config.Redirect = 1
 	return u
 }
 
@@ -326,96 +269,101 @@ func (u *Urllib) basicRules() {
 		u.err = err
 		return
 	}
-	u.req.URL = parse
-
-	if len(u.params) > 0 {
-		u.setFormParams(u.params)
-		u.SetHeader("Content-Type", "application/x-www-form-urlencoded")
-		return
-	}
-
-	if len(u.files) > 0 {
-		pr, pw := io.Pipe()
-		bodyWriter := multipart.NewWriter(pw)
-		go func() {
-			for formname, filename := range u.files {
-				fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
-				if err != nil {
-					log.Println("Urllib:", err)
-				}
-				fh, err := os.Open(filename)
-				if err != nil {
-					log.Println("Urllib:", err)
-				}
-				//iocopy
-				_, err = io.Copy(fileWriter, fh)
-				fh.Close()
-				if err != nil {
-					log.Println("Urllib:", err)
-				}
-			}
-			for k, v := range u.params {
-				for _, vv := range v {
-					bodyWriter.WriteField(k, vv)
-				}
-			}
-			bodyWriter.Close()
-			pw.Close()
-		}()
-		u.SetHeader("Content-Type", bodyWriter.FormDataContentType())
-		u.req.Body = ioutil.NopCloser(pr)
-		u.SetHeader("Transfer-Encoding", "chunked")
-		return
-	}
+	u.url = parse.String()
 }
 
-func (u *Urllib) body() (*http.Response, error) {
-	u.basicRules()
-
-	if u.config.Transport == nil {
-		u.config.Transport = &http.Transport{
-			TLSClientConfig:     u.config.TLSClientConfig,
-			Proxy:               u.config.Proxy,
-			Dial:                setTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
-			MaxIdleConnsPerHost: 100,
-		}
-	} else {
-		if t, ok := u.config.Transport.(*http.Transport); ok {
-			if t.TLSClientConfig == nil {
-				t.TLSClientConfig = u.config.TLSClientConfig
-			}
-			if t.Proxy == nil {
-				t.Proxy = u.config.Proxy
-			}
-			if t.Dial == nil {
-				t.Dial = setTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout)
-			}
-		}
-	}
-
-	initCookie()
-	jar := globalCookie
-
-	client := http.Client{
-		Transport: u.config.Transport,
-		Jar:       jar,
-	}
-
-	if u.config.CheckRedirect != nil {
-		client.CheckRedirect = u.config.CheckRedirect
-	}
-
+func (u *Urllib) body() (result *http.Response, err error) {
 	if u.err != nil {
-		return nil, u.err
+		return result, u.err
 	}
 
-	u.setBody()
+	u.basicRules()
 	if u.config.Gzip {
 		u.setGzip()
 	}
 
-	return client.Do(u.req)
+	// FastHttp server
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(req)   // <- do not forget to release
+	defer fasthttp.ReleaseResponse(resp) // <- do not forget to release
+
+	req.Header.SetMethod(u.method)
+	req.SetRequestURI(u.url)
+	if len(u.params.String()) > 0 {
+		if _, err := u.params.WriteTo(req.BodyWriter()); err != nil {
+			return result, u.err
+		}
+		u.SetHeader("Content-Type", "application/x-www-form-urlencoded")
+	}
+
+	if len(u.data) > 0 {
+		req.SetBody(u.data)
+	}
+
+	// set header
+	for k, v := range u.header {
+		req.Header.Add(k, v)
+	}
+
+	// ua
+	req.Header.SetUserAgent(u.config.UserAgent)
+
+	client := fasthttp.Client{
+		TLSConfig: u.config.TLSClientConfig,
+	}
+
+	if err := client.DoTimeout(req, resp, u.config.Timeout); err != nil {
+		return result, err
+	}
+
+	result = &http.Response{
+		StatusCode: resp.StatusCode(),
+		Header:     http.Header{},
+	}
+	resp.Header.VisitAll(func(key, value []byte) {
+		result.Header.Add(string(key), string(value))
+	})
+
+	result.Body = ioutil.NopCloser(bytes.NewReader(resp.Body()))
+	result.ContentLength = int64(len(resp.Body()))
+	return result, nil
 }
+
+type clientDoer interface {
+	Do(req *fasthttp.Request, resp *fasthttp.Response) error
+}
+
+//func doRequestFollowRedirects(req *fasthttp.Request,resp *fasthttp.Response,url string,maxRedirectsCount int, c clientDoer) (result *http.Response, err error) {
+//	redirectsCount := 0
+//	for {
+//		req.SetRequestURI(url)
+//		if err := req.parseURI(); err != nil {
+//			return nil, err
+//		}
+//
+//		if err = c.Do(req, resp); err != nil {
+//			break
+//		}
+//		statusCode = resp.Header.StatusCode()
+//		if !StatusCodeIsRedirect(statusCode) {
+//			break
+//		}
+//
+//		redirectsCount++
+//		if redirectsCount > maxRedirectsCount {
+//			err = ErrTooManyRedirects
+//			break
+//		}
+//		location := resp.Header.peek(strLocation)
+//		if len(location) == 0 {
+//			err = ErrMissingLocation
+//			break
+//		}
+//		url = getRedirectURL(url, location)
+//	}
+//}
+
 
 func (u *Urllib) byte() (int, []byte, error) {
 	body, err := u.body()
@@ -451,6 +399,7 @@ func (u *Urllib) byte() (int, []byte, error) {
 func (u *Urllib) Body() (*http.Response, error) {
 	return u.body()
 }
+
 func (u *Urllib) Byte() (int, []byte, error) {
 	return u.byte()
 }
@@ -481,20 +430,4 @@ func (u *Urllib) ByteRetry(retry int) (statusCode int, body []byte, err error) {
 		return statusCode, body, err
 	}
 	return statusCode, body, err
-}
-
-var globalCookie http.CookieJar
-var cookieMutex sync.Mutex
-
-func initCookie() {
-	cookieMutex.Lock()
-	defer cookieMutex.Unlock()
-	if globalCookie == nil {
-		jar, err := cookiejar.New(nil)
-		if err == nil {
-			globalCookie = jar
-			return
-		}
-		log.Println(err)
-	}
 }

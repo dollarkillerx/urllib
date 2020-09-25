@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
-	"net"
 	"net/url"
 	"strings"
 	"time"
@@ -90,19 +89,6 @@ func buildURLParams(userURL string, params url.Values) (string, error) {
 		return "", err
 	}
 
-	//parsedQuery, err := url.ParseQuery(parsedURL.RawQuery)
-	//
-	//if err != nil {
-	//	return "", nil
-	//}
-	//
-	//for _, param := range params {
-	//	for key, value := range param {
-	//		parsedQuery.Add(key, value)
-	//	}
-	//}
-	//
-	//encode := params.Encode()
 
 	return addQueryParams(parsedURL, params), nil
 }
@@ -113,13 +99,6 @@ func addQueryParams(parsedURL *url.URL, parsedQuery url.Values) string {
 	}
 	return parsedURL.String()
 }
-
-//func (u *urllib) setBodyBytes(Forms url.Values) {
-//	// maybe
-//	data := Forms.Encode()
-//	u.req.Body = ioutil.NopCloser(strings.NewReader(data))
-//	u.req.ContentLength = int64(len(data))
-//}
 
 func random(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
@@ -187,15 +166,4 @@ func GZipData(data []byte) (compressedData []byte, err error) {
 	compressedData = b.Bytes()
 
 	return
-}
-
-func setTimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
-	return func(netw, addr string) (net.Conn, error) {
-		conn, err := net.DialTimeout(netw, addr, cTimeout)
-		if err != nil {
-			return nil, err
-		}
-		err = conn.SetDeadline(time.Now().Add(rwTimeout))
-		return conn, err
-	}
 }
