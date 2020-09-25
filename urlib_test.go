@@ -222,7 +222,7 @@ func TestPost2(t *testing.T) {
 
 
 func TestPostFrom(t *testing.T) {
-	retry, body, err := Post("http://0.0.0.0:8986/test").Params("name", "sadas").Params("age", "16").ByteRetry(3)
+	retry, body, err := Post("http://0.0.0.0:8986/tc").Params("Name", "sadas").Params("Age", "16").ByteRetry(3)
 	if err != nil {
 		log.Fatalln(err)
 	}
