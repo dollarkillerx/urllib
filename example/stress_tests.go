@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/valyala/fasthttp"
+	"github.com/dollarkillerx/urllib"
 	"log"
 	"runtime"
 	"time"
@@ -27,7 +27,13 @@ func main() {
 				<-limit
 			}()
 
-			//_, _, err := urllib.Get("http://127.0.0.1:8986/test").Byte()
+			_, _, err := urllib.Get("http://127.0.0.1:8986/test").Byte()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			//_, err := urllib.DefGet("http://127.0.0.1:8986/test")
 			//if err != nil {
 			//	log.Println(err)
 			//	return
@@ -55,13 +61,12 @@ func main() {
 			//}
 			//fasthttp.ReleaseRequest(req)
 			//fasthttp.ReleaseResponse(resp)
-			_, _, err := fasthttp.Get(nil, "http://127.0.0.1:8986/test")
-			if err != nil {
-				log.Println(err)
-			}
 
+			//_, _, err := fasthttp.GetTimeout(nil, "http://127.0.0.1:8986/test", time.Second)
+			//if err != nil {
+			//	log.Println(err)
+			//}
 
-			//http.Get()
 		}(limit)
 	}
 }

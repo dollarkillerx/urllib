@@ -219,3 +219,61 @@ func TestPost2(t *testing.T) {
 	}
 	log.Println(string(all))
 }
+
+
+func TestPostFrom(t *testing.T) {
+	retry, body, err := Post("http://0.0.0.0:8986/test").Params("name", "sadas").Params("age", "16").ByteRetry(3)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(retry)
+	log.Println(string(body))
+}
+
+func TestPostJson(t *testing.T) {
+	type p struct {
+		Name string `json:"name"`
+		Age  int    `json:"age"`
+	}
+	retry, body, err := Post("http://0.0.0.0:8986/test").SetJsonObject(&p{
+		Name: "dollarkiller",
+		Age:  20,
+	}).ByteRetry(3)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(retry)
+	log.Println(string(body))
+}
+
+func TestGetQuery(t *testing.T) {
+	retry, body, err := Get("http://0.0.0.0:8986/c").Queries("q", "hello").Queries("g","asdsad").ByteRetry(3)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(retry)
+	log.Println(string(body))
+
+	retry, body, err = Get("http://0.0.0.0:8986/c?name=sdsd&q=sad").Queries("g","asdsad").ByteRetry(3)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(retry)
+	log.Println(string(body))
+}
+
+func TestGet(t *testing.T) {
+	i, bytes, err := Get("http://127.0.0.1:8986/test").Byte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(i)
+	log.Println(string(bytes))
+
+	i, bytes, err = Get("http://127.0.0.1:8986/t").NoRedirect().Byte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(i)
+	log.Println(string(bytes))
+}

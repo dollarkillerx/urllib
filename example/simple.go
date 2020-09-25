@@ -3,7 +3,7 @@ package main
 import (
 	//"github.com/dollarkillerx/urllib"
 
-	"github.com/valyala/fasthttp"
+	"github.com/dollarkillerx/fasthttp"
 	"log"
 	"net/http"
 	"runtime"

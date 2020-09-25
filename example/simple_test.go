@@ -3,8 +3,8 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/dollarkillerx/fasthttp"
 	"github.com/dollarkillerx/urllib"
-	"github.com/valyala/fasthttp"
 	"log"
 	"testing"
 )

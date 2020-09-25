@@ -89,7 +89,6 @@ func buildURLParams(userURL string, params url.Values) (string, error) {
 		return "", err
 	}
 
-
 	return addQueryParams(parsedURL, params), nil
 }
 
@@ -166,4 +165,35 @@ func GZipData(data []byte) (compressedData []byte, err error) {
 	compressedData = b.Bytes()
 
 	return
+}
+
+func RedirectUrl(url string,url3 string) string {
+	if string(url3[0]) == "/" || strings.Index(url3, "http") != -1 {
+		if strings.Index(url3, "http://") == -1 && strings.Index(url3, "https://") == -1 {
+			url3 = getBaseUrl(url) + url3
+		}
+	} else {
+		url3 = url + "/" + url3
+	}
+	return url3
+}
+
+func getBaseUrl(url string) string {
+	c := url
+	header := ""
+	if idx := strings.Index(url, "http://"); idx != -1 {
+		c = url[idx+7:]
+		header = "http://"
+	}
+
+	if idx := strings.Index(url, "https://"); idx != -1 {
+		c = url[idx+8:]
+		header = "https://"
+	}
+
+	if idx := strings.Index(c, "/"); idx != -1 {
+		c = c[:idx]
+	}
+
+	return header + c
 }

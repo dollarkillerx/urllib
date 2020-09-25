@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/valyala/fasthttp"
+	"github.com/dollarkillerx/fasthttp"
 )
 
 func Get(url string) *Urllib {
@@ -253,7 +253,7 @@ func (u *Urllib) setGzip() *Urllib {
 }
 
 func (u *Urllib) NoRedirect() *Urllib {
-	u.config.Redirect = 1
+	u.config.Redirect = 0
 	return u
 }
 
@@ -284,9 +284,7 @@ func (u *Urllib) body() (result *http.Response, err error) {
 
 	// FastHttp server
 	req := fasthttp.AcquireRequest()
-	resp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseRequest(req)   // <- do not forget to release
-	defer fasthttp.ReleaseResponse(resp) // <- do not forget to release
+	defer fasthttp.ReleaseRequest(req) // <- do not forget to release
 
 	req.Header.SetMethod(u.method)
 	req.SetRequestURI(u.url)
@@ -309,18 +307,88 @@ func (u *Urllib) body() (result *http.Response, err error) {
 	// ua
 	req.Header.SetUserAgent(u.config.UserAgent)
 
-	client := fasthttp.Client{
-		TLSConfig: u.config.TLSClientConfig,
+	return u.doRequestFollowRedirectsBuffer(req, nil, u.url, &client, u.config.Redirect)
+}
+
+var client fasthttp.Client
+
+func init() {
+	client = fasthttp.Client{
+		TLSConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
-	if err := client.DoTimeout(req, resp, u.config.Timeout); err != nil {
-		return result, err
+}
+
+type clientDoer interface {
+	Do(req *fasthttp.Request, resp *fasthttp.Response) error
+	DoTimeout(req *fasthttp.Request, resp *fasthttp.Response, timeout time.Duration) error
+}
+
+func (u *Urllib) clientGetURL(dst []byte, url string, c clientDoer) (response *http.Response, err error) {
+	req := fasthttp.AcquireRequest()
+
+	buffer, err := u.doRequestFollowRedirectsBuffer(req, dst, url, c, 3)
+
+	fasthttp.ReleaseRequest(req)
+	return buffer, err
+}
+
+func (u *Urllib) doRequestFollowRedirectsBuffer(req *fasthttp.Request, dst []byte, url string, c clientDoer, redirectsCount int) (result *http.Response, err error) {
+	resp := fasthttp.AcquireResponse()
+	bodyBuf := resp.BodyBuffer()
+	resp.KeepBodyBuffer = true
+	oldBody := bodyBuf.B
+	bodyBuf.B = dst
+	var body []byte
+	result, err = u.doRequestFollowRedirects(req, resp, url, redirectsCount, c)
+	body = bodyBuf.B
+	bodyBuf.B = oldBody
+	resp.KeepBodyBuffer = false
+	fasthttp.ReleaseResponse(resp)
+	body = body
+	if err != nil {
+		return nil, err
+	}
+
+	return result, err
+}
+
+func (u *Urllib) doRequestFollowRedirects(req *fasthttp.Request, resp *fasthttp.Response, url string, maxRedirectsCount int, c clientDoer) (result *http.Response, err error) {
+	redirectsCount := 0
+	var statusCode int
+
+	for {
+		req.SetRequestURI(url)
+		if err := req.ParseURI(); err != nil {
+			return nil, err
+		}
+
+		if err = c.DoTimeout(req, resp, u.config.Timeout); err != nil {
+			break
+		}
+		statusCode = resp.Header.StatusCode()
+		if !fasthttp.StatusCodeIsRedirect(statusCode) {
+			break
+		}
+
+		redirectsCount++
+		if redirectsCount > maxRedirectsCount {
+			err = fasthttp.ErrTooManyRedirects
+			break
+		}
+		location := resp.Header.Peek(fasthttp.HeaderLocation)
+		if len(location) == 0 {
+			err = fasthttp.ErrMissingLocation
+			break
+		}
+		url = RedirectUrl(url, string(location))
 	}
 
 	result = &http.Response{
 		StatusCode: resp.StatusCode(),
 		Header:     http.Header{},
 	}
+
 	resp.Header.VisitAll(func(key, value []byte) {
 		result.Header.Add(string(key), string(value))
 	})
@@ -329,41 +397,6 @@ func (u *Urllib) body() (result *http.Response, err error) {
 	result.ContentLength = int64(len(resp.Body()))
 	return result, nil
 }
-
-type clientDoer interface {
-	Do(req *fasthttp.Request, resp *fasthttp.Response) error
-}
-
-//func doRequestFollowRedirects(req *fasthttp.Request,resp *fasthttp.Response,url string,maxRedirectsCount int, c clientDoer) (result *http.Response, err error) {
-//	redirectsCount := 0
-//	for {
-//		req.SetRequestURI(url)
-//		if err := req.parseURI(); err != nil {
-//			return nil, err
-//		}
-//
-//		if err = c.Do(req, resp); err != nil {
-//			break
-//		}
-//		statusCode = resp.Header.StatusCode()
-//		if !StatusCodeIsRedirect(statusCode) {
-//			break
-//		}
-//
-//		redirectsCount++
-//		if redirectsCount > maxRedirectsCount {
-//			err = ErrTooManyRedirects
-//			break
-//		}
-//		location := resp.Header.peek(strLocation)
-//		if len(location) == 0 {
-//			err = ErrMissingLocation
-//			break
-//		}
-//		url = getRedirectURL(url, location)
-//	}
-//}
-
 
 func (u *Urllib) byte() (int, []byte, error) {
 	body, err := u.body()
