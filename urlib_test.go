@@ -1,7 +1,6 @@
 package urllib
 
 import (
-	"io/ioutil"
 	"log"
 	"testing"
 )
@@ -201,21 +200,25 @@ func TestPost(t *testing.T) {
 func TestPost2(t *testing.T) {
 	log.SetFlags(log.LstdFlags | log.Llongfile)
 
-	body, err := Post("http://0.0.0.0:8083/test").SetJsonObject(map[string]interface{}{
-		"name": "dolalark",
-		"pc": map[string]string{
-			"ads": "sada",
-		},
-	}).Body()
-	if err != nil {
-		log.Fatalln(err)
+	limit := make(chan bool, 300)
+	for {
+		limit <- true
+		go func() {
+			defer func() {
+				<-limit
+			}()
+			//retry, body, err := Get("http://0.0.0.0:8083/test").ByteRetry(3)
+			retry, body, err := Post("http://0.0.0.0:8083/test").SetJsonObject(map[string]interface{}{
+				"name": "dollarkiller",
+				"age":  18,
+			}).ByteRetry(3)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			if retry != 200 {
+				log.Println(string(body))
+			}
+		}()
 	}
-	defer body.Body.Close()
-	log.Println(body.StatusCode)
-
-	all, err := ioutil.ReadAll(body.Body)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Println(string(all))
 }

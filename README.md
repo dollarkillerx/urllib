@@ -1,6 +1,10 @@
 # urllib
 golang urllib Simple HTTP Client
 
+### 分支
+- master  FastHttp   追求极致的性能
+- v1      net/http   拥有完善的功能
+
 ### characteristic
 - simple http client 
 - automatic transcoding utf-8
