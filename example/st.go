@@ -28,36 +28,6 @@ func main() {
 				<-limit
 			}()
 
-			//_, _, err := urllib.Get("http://127.0.0.1:8986/test").Byte()
-			//if err != nil {
-			//	log.Println(err)
-			//	return
-			//}
-
-			//_, _, err := fasthttp.Get(nil, "http://127.0.0.1:8986/test")
-			//if err != nil {
-			//	log.Println(err)
-			//	return
-			//}
-
-			//req := fasthttp.AcquireRequest()
-			//resp := fasthttp.AcquireResponse()
-			//defer fasthttp.ReleaseRequest(req)   // <- do not forget to release
-			//defer fasthttp.ReleaseResponse(resp) // <- do not forget to release
-			//
-			//req.Header.SetMethod("GET")
-			//req.SetRequestURI("http://127.0.0.1:8986/test")
-			//
-			//client := fasthttp.Client{}
-			//
-			//err := client.Do(req, resp)
-			//if err != nil {
-			//	log.Println(err)
-			//}
-			////fasthttp.ReleaseRequest(req)
-			////fasthttp.ReleaseResponse(resp)
-			//fasthttp.Get()
-
 			_, err := http.Get("http://127.0.0.1:8986/test")
 			if err != nil {
 				log.Println(err)
