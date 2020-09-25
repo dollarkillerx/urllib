@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/valyala/fasthttp"
 	"log"
-	"net/http"
 	"runtime"
 	"time"
 )
@@ -18,7 +17,7 @@ func main() {
 		}
 	}()
 
-	limit := make(chan bool, 100)
+	limit := make(chan bool, 300)
 	for {
 		limit <- true
 		//time.Sleep(time.Millisecond * 50)
@@ -40,25 +39,29 @@ func main() {
 			//	return
 			//}
 
-			req := fasthttp.AcquireRequest()
-			resp := fasthttp.AcquireResponse()
-			defer fasthttp.ReleaseRequest(req)   // <- do not forget to release
-			defer fasthttp.ReleaseResponse(resp) // <- do not forget to release
-
-			req.Header.SetMethod("GET")
-			req.SetRequestURI("http://127.0.0.1:8986/test")
-
-			client := fasthttp.Client{}
-
-			err := client.Do(req, resp)
+			//req := fasthttp.AcquireRequest()
+			//resp := fasthttp.AcquireResponse()
+			//defer fasthttp.ReleaseRequest(req)   // <- do not forget to release
+			//defer fasthttp.ReleaseResponse(resp) // <- do not forget to release
+			//
+			//req.Header.SetMethod("GET")
+			//req.SetRequestURI("http://127.0.0.1:8986/test")
+			//
+			//client := fasthttp.Client{}
+			//
+			//err := client.Do(req, resp)
+			//if err != nil {
+			//	log.Println(err)
+			//}
+			//fasthttp.ReleaseRequest(req)
+			//fasthttp.ReleaseResponse(resp)
+			_, _, err := fasthttp.Get(nil, "http://127.0.0.1:8986/test")
 			if err != nil {
 				log.Println(err)
 			}
-			//fasthttp.ReleaseRequest(req)
-			//fasthttp.ReleaseResponse(resp)
-			fasthttp.Get()
 
-			http.Get()
+
+			//http.Get()
 		}(limit)
 	}
 }
