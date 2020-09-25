@@ -1,6 +1,7 @@
 package urllib
 
 import (
+	"io/ioutil"
 	"log"
 	"testing"
 )
@@ -181,4 +182,40 @@ func TestAbc(t *testing.T) {
 }
 func TestAbb(t *testing.T) {
 	Get("http://www.baidu.com?q=1212").ByteRetry(3)
+}
+
+func TestPost(t *testing.T) {
+	retry, body, err := Post("http://0.0.0.0:8083/test").SetJsonObject(map[string]interface{}{
+		"name": "dolalark",
+		"pc": map[string]string{
+			"ads": "sada",
+		},
+	}).ByteRetry(3)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(retry)
+	log.Println(string(body))
+}
+
+func TestPost2(t *testing.T) {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	body, err := Post("http://0.0.0.0:8083/test").SetJsonObject(map[string]interface{}{
+		"name": "dolalark",
+		"pc": map[string]string{
+			"ads": "sada",
+		},
+	}).Body()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer body.Body.Close()
+	log.Println(body.StatusCode)
+
+	all, err := ioutil.ReadAll(body.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(string(all))
 }

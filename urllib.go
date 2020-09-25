@@ -239,30 +239,34 @@ func (u *Urllib) PostFile(fromKey, filePath string) *Urllib {
 	return u
 }
 
+func (u *Urllib) setBody() {
+	if len(u.data) != 0 {
+		u.req.Body = ioutil.NopCloser(bytes.NewBuffer(u.data))
+		u.req.ContentLength = int64(len(u.data))
+	}
+}
+
 func (u *Urllib) SetBody(body []byte) *Urllib {
-	u.req.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	u.req.ContentLength = int64(len(body))
+	u.data = body
 	return u
 }
 
 func (u *Urllib) SetJson(body []byte) *Urllib {
-	if u.req.Body == nil && body != nil {
-		u.req.Body = ioutil.NopCloser(bytes.NewReader(body))
-		u.req.ContentLength = int64(len(body))
+	if body != nil {
+		u.data = body
 		u.req.Header.Set("Content-Type", "application/json")
 	}
 	return u
 }
 
 func (u *Urllib) SetJsonObject(obj interface{}) *Urllib {
-	if u.req.Body == nil && obj != nil {
+	if obj != nil {
 		body, err := json.Marshal(obj)
 		if err != nil {
 			u.err = err
 			return u
 		}
-		u.req.Body = ioutil.NopCloser(bytes.NewReader(body))
-		u.req.ContentLength = int64(len(body))
+		u.data = body
 		u.req.Header.Set("Content-Type", "application/json")
 	}
 	return u
@@ -368,10 +372,6 @@ func (u *Urllib) basicRules() {
 func (u *Urllib) body() (*http.Response, error) {
 	u.basicRules()
 
-	if u.config.Gzip {
-		u.setGzip()
-	}
-
 	if u.config.Transport == nil {
 		u.config.Transport = &http.Transport{
 			TLSClientConfig:     u.config.TLSClientConfig,
@@ -408,6 +408,12 @@ func (u *Urllib) body() (*http.Response, error) {
 	if u.err != nil {
 		return nil, u.err
 	}
+
+	u.setBody()
+	if u.config.Gzip {
+		u.setGzip()
+	}
+
 	return client.Do(u.req)
 }
 
@@ -420,6 +426,9 @@ func (u *Urllib) byte() (int, []byte, error) {
 	all, err := ioutil.ReadAll(body.Body)
 	if err != nil {
 		return 0, all, err
+	}
+	if len(all) == 0 {
+		return body.StatusCode, all, nil
 	}
 	// GZIP
 	if body.Header.Get("Content-Encoding") == "gzip" {
