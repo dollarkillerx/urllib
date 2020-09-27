@@ -277,3 +277,20 @@ func TestGet(t *testing.T) {
 	log.Println(i)
 	log.Println(string(bytes))
 }
+
+
+func TestPojs(t *testing.T) {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	js := `{"partner_id":"web","param":{"pageCallback":"eyJmaXJzdElkIjo4OTk5ODU3NTM4NjI5MTIsImxhc3RJZCI6ODk5OTE3MDg5OTQ0ODM3LCJmaXJzdENyZWF0ZVRpbWUiOjE2MDEyMDI3NzExMDksImxhc3RDcmVhdGVUaW1lIjoxNjAxMTk4NTgwMTk2fQ","pageEvent":1,"pageSize":20,"platformId":2,"siteId":1}}`
+
+	//retry, body, err := urllib.Post("https://gateway.36kr.com/api/mis/nav/newsflash/flow").
+	retry, body, err := Post("http://127.0.0.1:8081/test").
+		SetJson([]byte(js)).SetHeader("Content-Type","application/json;charset=UTF-8").ByteRetry(3)
+	if err != nil {
+		log.Println("a")
+		log.Fatalln(err)
+	}
+	log.Println(retry)
+	log.Println(string(body))
+}

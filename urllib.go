@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -301,8 +302,10 @@ func (u *Urllib) body() (result *http.Response, err error) {
 
 	// set header
 	for k, v := range u.header {
-		req.Header.Add(k, v)
+		req.Header.Set(k, v)
 	}
+
+	log.Println(string(req.Header.Peek("Content-Type")))
 
 	// ua
 	req.Header.SetUserAgent(u.config.UserAgent)
