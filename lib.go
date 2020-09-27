@@ -170,7 +170,7 @@ func GZipData(data []byte) (compressedData []byte, err error) {
 func RedirectUrl(url string,url3 string) string {
 	if string(url3[0]) == "/" || strings.Index(url3, "http") != -1 {
 		if strings.Index(url3, "http://") == -1 && strings.Index(url3, "https://") == -1 {
-			url3 = getBaseUrl(url) + url3
+			url3 = GetBaseUrl(url) + url3
 		}
 	} else {
 		url3 = url + "/" + url3
@@ -178,7 +178,7 @@ func RedirectUrl(url string,url3 string) string {
 	return url3
 }
 
-func getBaseUrl(url string) string {
+func GetBaseUrl(url string) string {
 	c := url
 	header := ""
 	if idx := strings.Index(url, "http://"); idx != -1 {
