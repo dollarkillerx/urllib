@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"time"
