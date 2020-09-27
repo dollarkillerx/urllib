@@ -305,8 +305,6 @@ func (u *Urllib) body() (result *http.Response, err error) {
 		req.Header.Set(k, v)
 	}
 
-	log.Println(string(req.Header.Peek("Content-Type")))
-
 	// ua
 	req.Header.SetUserAgent(u.config.UserAgent)
 
