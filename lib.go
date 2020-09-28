@@ -105,6 +105,9 @@ func random(min, max int) int {
 }
 
 func AutomaticTranscoding(contentType string, data []byte) (result []byte, err error) {
+	if len(data) == 0 {
+		return data, nil
+	}
 	contentType = strings.ToLower(contentType)
 	// 如果没有charset 进行自动识别
 	if !strings.Contains(contentType, "charset") {
@@ -167,7 +170,7 @@ func GZipData(data []byte) (compressedData []byte, err error) {
 	return
 }
 
-func RedirectUrl(url string,url3 string) string {
+func RedirectUrl(url string, url3 string) string {
 	if string(url3[0]) == "/" || strings.Index(url3, "http") != -1 {
 		if strings.Index(url3, "http://") == -1 && strings.Index(url3, "https://") == -1 {
 			url3 = GetBaseUrl(url) + url3

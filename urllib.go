@@ -1,11 +1,13 @@
 package urllib
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -401,31 +403,53 @@ func (u *Urllib) doRequestFollowRedirects(req *fasthttp.Request, resp *fasthttp.
 func (u *Urllib) byte() (int, []byte, error) {
 	body, err := u.body()
 	if err != nil {
+		log.Println(err)
 		return 0, nil, err
 	}
 	defer body.Body.Close()
-	all, err := ioutil.ReadAll(body.Body)
-	if err != nil {
-		return 0, all, err
-	}
-	if len(all) == 0 {
-		return body.StatusCode, all, nil
-	}
+	var all []byte
 	// GZIP
 	if body.Header.Get("Content-Encoding") == "gzip" {
-		reader, err := gzip.NewReader(body.Body)
+		readAll, err := ioutil.ReadAll(body.Body)
 		if err != nil {
+			log.Println(err)
+			return 0, nil, nil
+		}
+		log.Println(string(readAll))
+		r, err := gzip.NewReader(bytes.NewReader(readAll))
+		if err != nil {
+			log.Println(err)
 			return 0, nil, err
 		}
-		all, err = ioutil.ReadAll(reader)
+		defer r.Close()
+
+		reader := bufio.NewReader(r)
+		for {
+			line, _, err := reader.ReadLine()
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			all = append(all, line...)
+		}
+
+	} else {
+		all, err = ioutil.ReadAll(body.Body)
 		if err != nil {
-			return 0, nil, err
+			log.Println(err)
+			return 0, all, err
+		}
+		if len(all) == 0 {
+			return body.StatusCode, all, nil
 		}
 	}
 
 	// 旋转木马
 	contentType := body.Header.Get("Content-Type")
 	all, err = AutomaticTranscoding(contentType, all)
+	if err != nil {
+		log.Println(err)
+	}
 	return body.StatusCode, all, err
 }
 

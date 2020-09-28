@@ -294,3 +294,13 @@ func TestPojs(t *testing.T) {
 	log.Println(retry)
 	log.Println(string(body))
 }
+func TestGp(t *testing.T)  {
+	log.SetFlags(log.LstdFlags | log.Llongfile)
+
+	i, bytes, err := Get("https://36kr.com/newsflashes").Byte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(i)
+	log.Println(string(bytes))
+}
