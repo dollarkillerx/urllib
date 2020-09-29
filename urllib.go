@@ -261,6 +261,12 @@ func (u *Urllib) SetJson(body []byte) *Urllib {
 	return u
 }
 
+// 防止请求服务器Socks关闭引起 EOF错误
+func (u *Urllib) PreventEOF() *Urllib {
+	u.req.Close = true
+	return u
+}
+
 func (u *Urllib) SetJsonObject(obj interface{}) *Urllib {
 	if obj != nil {
 		body, err := json.Marshal(obj)

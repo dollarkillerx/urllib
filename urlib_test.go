@@ -281,14 +281,14 @@ func TestGet(t *testing.T) {
 }
 
 func TestGp(t *testing.T) {
-	limit := make(chan bool, 10)
+	limit := make(chan bool, 1)
 	for {
 		limit<-true
 		go func() {
 			defer func() {
 				<-limit
 			}()
-			retry, body, err := Get("https://www.huxiu.com/article/383205.html").ByteRetry(3)
+			retry, body, err := Get("https://www.huxiu.com/article/383205.html").PreventEOF().ByteRetry(3)
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -296,6 +296,7 @@ func TestGp(t *testing.T) {
 				log.Println(retry)
 				log.Println(string(body))
 			}
+			log.Println("SUccess")
 		}()
 	}
 
