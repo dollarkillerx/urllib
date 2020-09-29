@@ -432,7 +432,7 @@ func (u *Urllib) byte() (int, []byte, error) {
 	}
 	// GZIP
 	if body.Header.Get("Content-Encoding") == "gzip" {
-		reader, err := gzip.NewReader(body.Body)
+		reader, err := gzip.NewReader(bytes.NewReader(all))
 		if err != nil {
 			return 0, nil, err
 		}
