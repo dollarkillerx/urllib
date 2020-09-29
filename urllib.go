@@ -75,6 +75,7 @@ var defaultConfig = Config{
 }
 
 func getBase(tagUrl, method string) *Urllib {
+	tagUrl = addPlt(tagUrl)
 	var resp http.Response
 	u, err := url.Parse(tagUrl)
 

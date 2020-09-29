@@ -3,6 +3,7 @@ package urllib
 import (
 	"bytes"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -198,4 +199,11 @@ func setTimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net,
 		err = conn.SetDeadline(time.Now().Add(rwTimeout))
 		return conn, err
 	}
+}
+
+func addPlt(url string) string {
+	if strings.Index(url, "http") == -1 {
+		return fmt.Sprintf("http://%s", url)
+	}
+	return url
 }
