@@ -65,6 +65,7 @@ type Config struct {
 	Transport        http.RoundTripper
 	CheckRedirect    func(req *http.Request, via []*http.Request) error
 	Gzip             bool
+	Debug            bool
 }
 
 var defaultConfig = Config{
@@ -299,7 +300,9 @@ func (u *Urllib) setGzip() *Urllib {
 	data, err := GZipData(all)
 	if err != nil {
 		u.err = err
-		log.Println(u.err)
+		if u.config.Debug {
+			log.Println(u.err)
+		}
 		return u
 	}
 
@@ -313,6 +316,11 @@ func (u *Urllib) NoRedirect() *Urllib {
 	u.config.CheckRedirect = func(req *http.Request, via []*http.Request) error { // 定制禁用跳转
 		return http.ErrUseLastResponse
 	}
+	return u
+}
+
+func (u *Urllib) Debug() *Urllib {
+	u.config.Debug = true
 	return u
 }
 
@@ -408,7 +416,9 @@ func (u *Urllib) body() (*http.Response, error) {
 	}
 
 	if u.err != nil {
-		log.Println(u.err)
+		if u.config.Debug {
+			log.Println(u.err)
+		}
 		return nil, u.err
 	}
 
@@ -423,13 +433,17 @@ func (u *Urllib) body() (*http.Response, error) {
 func (u *Urllib) byte() (int, []byte, error) {
 	body, err := u.body()
 	if err != nil {
-		log.Println(err)
+		if u.config.Debug {
+			log.Println(err)
+		}
 		return 0, nil, err
 	}
 	defer body.Body.Close()
 	all, err := ioutil.ReadAll(body.Body)
 	if err != nil {
-		log.Println(err)
+		if u.config.Debug {
+			log.Println(err)
+		}
 		return 0, all, err
 	}
 	if len(all) == 0 {
@@ -439,12 +453,16 @@ func (u *Urllib) byte() (int, []byte, error) {
 	if body.Header.Get("Content-Encoding") == "gzip" {
 		reader, err := gzip.NewReader(bytes.NewReader(all))
 		if err != nil {
-			log.Println(err)
+			if u.config.Debug {
+				log.Println(err)
+			}
 			return 0, nil, err
 		}
 		all, err = ioutil.ReadAll(reader)
 		if err != nil {
-			log.Println(err)
+			if u.config.Debug {
+				log.Println(err)
+			}
 			return 0, nil, err
 		}
 	}
@@ -453,7 +471,9 @@ func (u *Urllib) byte() (int, []byte, error) {
 	contentType := body.Header.Get("Content-Type")
 	all, err = AutomaticTranscoding(contentType, all)
 	if err != nil {
-		log.Println(err)
+		if u.config.Debug {
+			log.Println(err)
+		}
 	}
 	return body.StatusCode, all, err
 }
