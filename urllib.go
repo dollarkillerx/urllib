@@ -299,6 +299,7 @@ func (u *Urllib) setGzip() *Urllib {
 	data, err := GZipData(all)
 	if err != nil {
 		u.err = err
+		log.Println(u.err)
 		return u
 	}
 
@@ -407,6 +408,7 @@ func (u *Urllib) body() (*http.Response, error) {
 	}
 
 	if u.err != nil {
+		log.Println(u.err)
 		return nil, u.err
 	}
 
@@ -421,11 +423,13 @@ func (u *Urllib) body() (*http.Response, error) {
 func (u *Urllib) byte() (int, []byte, error) {
 	body, err := u.body()
 	if err != nil {
+		log.Println(err)
 		return 0, nil, err
 	}
 	defer body.Body.Close()
 	all, err := ioutil.ReadAll(body.Body)
 	if err != nil {
+		log.Println(err)
 		return 0, all, err
 	}
 	if len(all) == 0 {
@@ -435,10 +439,12 @@ func (u *Urllib) byte() (int, []byte, error) {
 	if body.Header.Get("Content-Encoding") == "gzip" {
 		reader, err := gzip.NewReader(bytes.NewReader(all))
 		if err != nil {
+			log.Println(err)
 			return 0, nil, err
 		}
 		all, err = ioutil.ReadAll(reader)
 		if err != nil {
+			log.Println(err)
 			return 0, nil, err
 		}
 	}
@@ -446,6 +452,9 @@ func (u *Urllib) byte() (int, []byte, error) {
 	// 旋转木马
 	contentType := body.Header.Get("Content-Type")
 	all, err = AutomaticTranscoding(contentType, all)
+	if err != nil {
+		log.Println(err)
+	}
 	return body.StatusCode, all, err
 }
 
@@ -458,10 +467,25 @@ func (u *Urllib) Byte() (int, []byte, error) {
 
 // 拥有重尝 版本
 func (u *Urllib) BodyRetry(retry int) (body *http.Response, err error) {
+	if retry == 0 {
+		retry = 3
+	}
+
 	for i := 0; i < retry; i++ {
 		body, err = u.body()
 		if err != nil {
-			time.Sleep(time.Second * time.Duration(random(1, 5)))
+			if i == 3 {
+				switch {
+				case i == 0:
+					time.Sleep(time.Second * time.Duration(random(1, 5)))
+				case i == 1:
+					time.Sleep(time.Second * time.Duration(random(8, 10)))
+				default:
+					time.Sleep(time.Second * time.Duration(random(10, 20)))
+				}
+			} else {
+				time.Sleep(time.Second * time.Duration(random(1, 5)))
+			}
 			continue
 		}
 		return body, err
@@ -476,7 +500,18 @@ func (u *Urllib) ByteRetry(retry int) (statusCode int, body []byte, err error) {
 	for i := 0; i < retry; i++ {
 		statusCode, body, err = u.byte()
 		if err != nil {
-			time.Sleep(time.Second * time.Duration(random(1, 5)))
+			if i == 3 {
+				switch {
+				case i == 0:
+					time.Sleep(time.Second * time.Duration(random(1, 5)))
+				case i == 1:
+					time.Sleep(time.Second * time.Duration(random(8, 10)))
+				default:
+					time.Sleep(time.Second * time.Duration(random(10, 20)))
+				}
+			} else {
+				time.Sleep(time.Second * time.Duration(random(1, 5)))
+			}
 			continue
 		}
 		return statusCode, body, err

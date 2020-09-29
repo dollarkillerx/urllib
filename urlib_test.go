@@ -249,14 +249,14 @@ func TestPostJson(t *testing.T) {
 }
 
 func TestGetQuery(t *testing.T) {
-	retry, body, err := Get("http://0.0.0.0:8986/c").Queries("q", "hello").Queries("g","asdsad").ByteRetry(3)
+	retry, body, err := Get("http://0.0.0.0:8986/c").Queries("q", "hello").Queries("g", "asdsad").ByteRetry(3)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	log.Println(retry)
 	log.Println(string(body))
 
-	retry, body, err = Get("http://0.0.0.0:8986/c?name=sdsd&q=sad").Queries("g","asdsad").ByteRetry(3)
+	retry, body, err = Get("http://0.0.0.0:8986/c?name=sdsd&q=sad").Queries("g", "asdsad").ByteRetry(3)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -278,4 +278,31 @@ func TestGet(t *testing.T) {
 	}
 	log.Println(i)
 	log.Println(string(bytes))
+}
+
+func TestGp(t *testing.T) {
+	limit := make(chan bool, 10)
+	for {
+		limit<-true
+		go func() {
+			defer func() {
+				<-limit
+			}()
+			retry, body, err := Get("https://www.huxiu.com/article/383205.html").ByteRetry(3)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			if retry != 200 {
+				log.Println(retry)
+				log.Println(string(body))
+			}
+		}()
+	}
+
+}
+
+func TestF(t *testing.T)  {
+	for i:=0;i<10;i++{
+		log.Println(i)
+	}
 }
