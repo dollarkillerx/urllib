@@ -1,10 +1,11 @@
-package main
+package test
 
 import (
 	"crypto/tls"
 	"fmt"
 	"github.com/dollarkillerx/fasthttp"
 	"github.com/dollarkillerx/urllib"
+	"github.com/dollarkillerx/urllib/lib"
 	"log"
 	"testing"
 )
@@ -83,4 +84,11 @@ func TestGet(t *testing.T) {
 	}
 	log.Println(i)
 	log.Println(string(bytes))
+}
+
+
+func TestMokeIP(t *testing.T) {
+	for i:=0;i<10;i++ {
+		fmt.Println(lib.RandomIp())
+	}
 }

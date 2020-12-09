@@ -1,4 +1,4 @@
-package urllib
+package lib
 
 import (
 	"bytes"
@@ -82,7 +82,7 @@ func ReptileGetUserAgent() string {
 }
 
 // handle URL params
-func buildURLParams(userURL string, params url.Values) (string, error) {
+func BuildURLParams(userURL string, params url.Values) (string, error) {
 	parsedURL, err := url.Parse(userURL)
 
 	if err != nil {
@@ -99,7 +99,7 @@ func addQueryParams(parsedURL *url.URL, parsedQuery url.Values) string {
 	return parsedURL.String()
 }
 
-func random(min, max int) int {
+func Random(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min
 }

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/dollarkillerx/fasthttp"
+	"github.com/dollarkillerx/urllib/lib"
 )
 
 func Get(url string) *Urllib {
@@ -117,7 +118,7 @@ func (u *Urllib) SetUserAgent(ua string) *Urllib {
 }
 
 func (u *Urllib) RandUserAgent() *Urllib {
-	u.config.UserAgent = ReptileGetUserAgent()
+	u.config.UserAgent = lib.ReptileGetUserAgent()
 	return u
 }
 
@@ -243,7 +244,7 @@ func (u *Urllib) setGzip() *Urllib {
 		return u
 	}
 
-	data, err := GZipData(u.data)
+	data, err := lib.GZipData(u.data)
 	if err != nil {
 		u.err = err
 		return u
@@ -261,7 +262,7 @@ func (u *Urllib) NoRedirect() *Urllib {
 
 func (u *Urllib) basicRules() {
 	// Url Params
-	distUrl, err := buildURLParams(u.url, u.querys)
+	distUrl, err := lib.BuildURLParams(u.url, u.querys)
 	if err != nil {
 		u.err = err
 		return
@@ -383,7 +384,7 @@ func (u *Urllib) doRequestFollowRedirects(req *fasthttp.Request, resp *fasthttp.
 			err = fasthttp.ErrMissingLocation
 			break
 		}
-		url = RedirectUrl(url, string(location))
+		url = lib.RedirectUrl(url, string(location))
 	}
 
 	result = &http.Response{
@@ -440,7 +441,7 @@ func (u *Urllib) byte() (int, []byte, error) {
 
 	// 旋转木马
 	contentType := body.Header.Get("Content-Type")
-	all, err = AutomaticTranscoding(contentType, all)
+	all, err = lib.AutomaticTranscoding(contentType, all)
 	if err != nil {
 		log.Println(err)
 	}
@@ -460,7 +461,7 @@ func (u *Urllib) BodyRetry(retry int) (body *http.Response, err error) {
 	for i := 0; i < retry; i++ {
 		body, err = u.body()
 		if err != nil {
-			time.Sleep(time.Second * time.Duration(random(1, 5)))
+			time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
 			continue
 		}
 		return body, err
@@ -475,7 +476,7 @@ func (u *Urllib) ByteRetry(retry int) (statusCode int, body []byte, err error) {
 	for i := 0; i < retry; i++ {
 		statusCode, body, err = u.byte()
 		if err != nil {
-			time.Sleep(time.Second * time.Duration(random(1, 5)))
+			time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
 			continue
 		}
 		return statusCode, body, err
