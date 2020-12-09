@@ -1,4 +1,4 @@
-package urllib
+package lib
 
 import (
 	"bytes"
@@ -84,7 +84,7 @@ func ReptileGetUserAgent() string {
 }
 
 // handle URL params
-func buildURLParams(userURL string, params url.Values) (string, error) {
+func BuildURLParams(userURL string, params url.Values) (string, error) {
 	parsedURL, err := url.Parse(userURL)
 
 	if err != nil {
@@ -122,7 +122,7 @@ func addQueryParams(parsedURL *url.URL, parsedQuery url.Values) string {
 //	u.req.ContentLength = int64(len(data))
 //}
 
-func random(min, max int) int {
+func Random(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min
 }
@@ -190,7 +190,7 @@ func GZipData(data []byte) (compressedData []byte, err error) {
 	return
 }
 
-func setTimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
+func SetTimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
 	return func(netw, addr string) (net.Conn, error) {
 		conn, err := net.DialTimeout(netw, addr, cTimeout)
 		if err != nil {
@@ -201,7 +201,7 @@ func setTimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net,
 	}
 }
 
-func addPlt(url string) string {
+func AddPlt(url string) string {
 	if strings.Index(url, "http") == -1 {
 		return fmt.Sprintf("http://%s", url)
 	}

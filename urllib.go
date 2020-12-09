@@ -2,6 +2,7 @@ package urllib
 
 import (
 	"bytes"
+	"github.com/dollarkillerx/urllib/lib"
 	"io"
 	"log"
 	"os"
@@ -76,7 +77,7 @@ var defaultConfig = Config{
 }
 
 func getBase(tagUrl, method string) *Urllib {
-	tagUrl = addPlt(tagUrl)
+	tagUrl = lib.AddPlt(tagUrl)
 	var resp http.Response
 	u, err := url.Parse(tagUrl)
 
@@ -142,7 +143,7 @@ func (u *Urllib) SetUserAgent(ua string) *Urllib {
 }
 
 func (u *Urllib) RandUserAgent() *Urllib {
-	u.req.Header.Set("User-Agent", ReptileGetUserAgent())
+	u.req.Header.Set("User-Agent", lib.ReptileGetUserAgent())
 	return u
 }
 
@@ -303,7 +304,7 @@ func (u *Urllib) setGzip() *Urllib {
 	if len(all) == 0 {
 		return u
 	}
-	data, err := GZipData(all)
+	data, err := lib.GZipData(all)
 	if err != nil {
 		u.err = err
 		if u.config.Debug {
@@ -330,9 +331,25 @@ func (u *Urllib) Debug() *Urllib {
 	return u
 }
 
+func (u *Urllib) DisguisedIP() *Urllib {
+	ip := lib.RandomIp()
+	log.Println(ip)
+	u.SetHeaderMap(map[string]string{
+		"X-Forwarded-For":  ip,
+		"X-Forwarded-Host": ip,
+		"X-Client-IP":      ip,
+		"X-remote-IP":      ip,
+		"X-remote-addr":    ip,
+		"True-Client-IP":   ip,
+		"Client-IP":        ip,
+		"X-Real-IP":        ip,
+	})
+	return u
+}
+
 func (u *Urllib) basicRules() {
 	// Url Params
-	distUrl, err := buildURLParams(u.url, u.querys)
+	distUrl, err := lib.BuildURLParams(u.url, u.querys)
 	if err != nil {
 		u.err = err
 		return
@@ -392,7 +409,7 @@ func (u *Urllib) body() (*http.Response, error) {
 		u.config.Transport = &http.Transport{
 			TLSClientConfig:     u.config.TLSClientConfig,
 			Proxy:               u.config.Proxy,
-			Dial:                setTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
+			Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
 		}
 	} else {
@@ -404,7 +421,7 @@ func (u *Urllib) body() (*http.Response, error) {
 				t.Proxy = u.config.Proxy
 			}
 			if t.Dial == nil {
-				t.Dial = setTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout)
+				t.Dial = lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout)
 			}
 		}
 	}
@@ -475,7 +492,7 @@ func (u *Urllib) byte() (int, []byte, error) {
 
 	// 旋转木马
 	contentType := body.Header.Get("Content-Type")
-	all, err = AutomaticTranscoding(contentType, all)
+	all, err = lib.AutomaticTranscoding(contentType, all)
 	if err != nil {
 		if u.config.Debug {
 			log.Println(err)
@@ -503,14 +520,14 @@ func (u *Urllib) BodyRetry(retry int) (body *http.Response, err error) {
 			if i == 3 {
 				switch {
 				case i == 0:
-					time.Sleep(time.Second * time.Duration(random(1, 5)))
+					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
 				case i == 1:
-					time.Sleep(time.Second * time.Duration(random(8, 10)))
+					time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
 				default:
-					time.Sleep(time.Second * time.Duration(random(10, 20)))
+					time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
 				}
 			} else {
-				time.Sleep(time.Second * time.Duration(random(1, 5)))
+				time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
 			}
 			continue
 		}
@@ -529,14 +546,14 @@ func (u *Urllib) ByteRetry(retry int) (statusCode int, body []byte, err error) {
 			if i == 3 {
 				switch {
 				case i == 0:
-					time.Sleep(time.Second * time.Duration(random(1, 5)))
+					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
 				case i == 1:
-					time.Sleep(time.Second * time.Duration(random(8, 10)))
+					time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
 				default:
-					time.Sleep(time.Second * time.Duration(random(10, 20)))
+					time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
 				}
 			} else {
-				time.Sleep(time.Second * time.Duration(random(1, 5)))
+				time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
 			}
 			continue
 		}

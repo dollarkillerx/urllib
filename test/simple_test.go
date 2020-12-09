@@ -1,7 +1,10 @@
-package main
+package test
 
 import (
+	"fmt"
 	"github.com/dollarkillerx/urllib"
+	"github.com/dollarkillerx/urllib/lib"
+	"io/ioutil"
 	"log"
 	"testing"
 )
@@ -16,4 +19,16 @@ func TestSendJson(t *testing.T) {
 	}
 	log.Println(i)
 	log.Println(string(bytes))
+}
+
+func TestIp(t *testing.T)  {
+	fmt.Println(lib.RandomIp())
+}
+
+func TestSendIp(t *testing.T) {
+	_, bytes, err := urllib.Get("https://www.ez2o.com/App/Net/IP").DisguisedIP().Byte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	ioutil.WriteFile("ip.html",bytes,00666)
 }
