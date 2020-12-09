@@ -333,7 +333,6 @@ func (u *Urllib) Debug() *Urllib {
 
 func (u *Urllib) DisguisedIP() *Urllib {
 	ip := lib.RandomIp()
-	log.Println(ip)
 	u.SetHeaderMap(map[string]string{
 		"X-Forwarded-For":  ip,
 		"X-Forwarded-Host": ip,
