@@ -331,7 +331,21 @@ func (u *Urllib) Debug() *Urllib {
 	return u
 }
 
-func (u *Urllib) DisguisedIP() *Urllib {
+func (u *Urllib)DisguisedIP(ip string) *Urllib {
+	u.SetHeaderMap(map[string]string{
+		"X-Forwarded-For":  ip,
+		"X-Forwarded-Host": ip,
+		"X-Client-IP":      ip,
+		"X-remote-IP":      ip,
+		"X-remote-addr":    ip,
+		"True-Client-IP":   ip,
+		"Client-IP":        ip,
+		"X-Real-IP":        ip,
+	})
+	return u
+}
+
+func (u *Urllib) RandDisguisedIP() *Urllib {
 	ip := lib.RandomIp()
 	u.SetHeaderMap(map[string]string{
 		"X-Forwarded-For":  ip,

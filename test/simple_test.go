@@ -26,7 +26,7 @@ func TestIp(t *testing.T)  {
 }
 
 func TestSendIp(t *testing.T) {
-	_, bytes, err := urllib.Get("https://www.ez2o.com/App/Net/IP").DisguisedIP().Byte()
+	_, bytes, err := urllib.Get("https://www.ez2o.com/App/Net/IP").RandDisguisedIP().Byte()
 	if err != nil {
 		log.Fatalln(err)
 	}
