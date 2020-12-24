@@ -21,7 +21,7 @@ func TestSendJson(t *testing.T) {
 	log.Println(string(bytes))
 }
 
-func TestIp(t *testing.T)  {
+func TestIp(t *testing.T) {
 	fmt.Println(lib.RandomIp())
 }
 
@@ -30,5 +30,5 @@ func TestSendIp(t *testing.T) {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	ioutil.WriteFile("ip.html",bytes,00666)
+	ioutil.WriteFile("ip.html", bytes, 00666)
 }

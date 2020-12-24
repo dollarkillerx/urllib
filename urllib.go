@@ -58,22 +58,20 @@ type Urllib struct {
 }
 
 type Config struct {
-	UserAgent        string
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-	TLSClientConfig  *tls.Config
-	Proxy            func(*http.Request) (*url.URL, error)
-	Transport        http.RoundTripper
-	CheckRedirect    func(req *http.Request, via []*http.Request) error
-	Gzip             bool
-	Debug            bool
+	UserAgent       string
+	ConnectTimeout  time.Duration
+	TLSClientConfig *tls.Config
+	Proxy           func(*http.Request) (*url.URL, error)
+	Transport       http.RoundTripper
+	CheckRedirect   func(req *http.Request, via []*http.Request) error
+	Gzip            bool
+	Debug           bool
 }
 
 var defaultConfig = Config{
-	UserAgent:        "Urllib Gold",
-	ConnectTimeout:   30 * time.Second,
-	ReadWriteTimeout: 30 * time.Second,
-	Gzip:             false,
+	UserAgent:      "Urllib Gold",
+	ConnectTimeout: 30 * time.Second,
+	Gzip:           false,
 }
 
 func getBase(tagUrl, method string) *Urllib {
@@ -98,6 +96,7 @@ func getBase(tagUrl, method string) *Urllib {
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
 		ProtoMinor: 1,
+		Close:      true,
 	}
 
 	base.SetUserAgent(base.config.UserAgent)
@@ -176,23 +175,6 @@ func (u *Urllib) SetTimeout(timeout time.Duration) *Urllib {
 		timeout = timeout * time.Second
 	}
 	u.config.ConnectTimeout = timeout
-	u.config.ReadWriteTimeout = timeout
-	return u
-}
-
-func (u *Urllib) SetConnectTimeout(timeout time.Duration) *Urllib {
-	if timeout < 10 {
-		timeout = timeout * time.Second
-	}
-	u.config.ConnectTimeout = timeout
-	return u
-}
-
-func (u *Urllib) SetReadWriteTimeout(timeout time.Duration) *Urllib {
-	if timeout < 10 {
-		timeout = timeout * time.Second
-	}
-	u.config.ReadWriteTimeout = timeout
 	return u
 }
 
@@ -331,7 +313,7 @@ func (u *Urllib) Debug() *Urllib {
 	return u
 }
 
-func (u *Urllib)DisguisedIP(ip string) *Urllib {
+func (u *Urllib) DisguisedIP(ip string) *Urllib {
 	u.SetHeaderMap(map[string]string{
 		"X-Forwarded-For":  ip,
 		"X-Forwarded-Host": ip,
@@ -420,9 +402,9 @@ func (u *Urllib) body() (*http.Response, error) {
 
 	if u.config.Transport == nil {
 		u.config.Transport = &http.Transport{
-			TLSClientConfig:     u.config.TLSClientConfig,
-			Proxy:               u.config.Proxy,
-			Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
+			TLSClientConfig: u.config.TLSClientConfig,
+			Proxy:           u.config.Proxy,
+			//Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
 		}
 	} else {
@@ -433,9 +415,9 @@ func (u *Urllib) body() (*http.Response, error) {
 			if t.Proxy == nil {
 				t.Proxy = u.config.Proxy
 			}
-			if t.Dial == nil {
-				t.Dial = lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout)
-			}
+			//if t.Dial == nil {
+			//	t.Dial = lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout)
+			//}
 		}
 	}
 
@@ -445,6 +427,7 @@ func (u *Urllib) body() (*http.Response, error) {
 	client := http.Client{
 		Transport: u.config.Transport,
 		Jar:       jar,
+		Timeout:   u.config.ConnectTimeout,
 	}
 
 	if u.config.CheckRedirect != nil {

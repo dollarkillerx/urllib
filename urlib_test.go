@@ -283,7 +283,7 @@ func TestGet(t *testing.T) {
 func TestGp(t *testing.T) {
 	limit := make(chan bool, 1)
 	for {
-		limit<-true
+		limit <- true
 		go func() {
 			defer func() {
 				<-limit
@@ -302,8 +302,8 @@ func TestGp(t *testing.T) {
 
 }
 
-func TestF(t *testing.T)  {
-	for i:=0;i<10;i++{
+func TestF(t *testing.T) {
+	for i := 0; i < 10; i++ {
 		log.Println(i)
 	}
 }
