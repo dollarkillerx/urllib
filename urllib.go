@@ -513,18 +513,18 @@ func (u *Urllib) BodyRetry(retry int) (body *http.Response, err error) {
 	for i := 0; i < retry; i++ {
 		body, err = u.body()
 		if err != nil {
-			if i == 3 {
-				switch {
-				case i == 0:
-					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
-				case i == 1:
-					time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
-				default:
-					time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
-				}
-			} else {
-				time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
-			}
+			//if i == 3 {
+			//	switch {
+			//	case i == 0:
+			//		time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+			//	case i == 1:
+			//		time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+			//	default:
+			//		time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+			//	}
+			//} else {
+			//	time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+			//}
 			continue
 		}
 		return body, err
@@ -539,18 +539,18 @@ func (u *Urllib) ByteRetry(retry int) (statusCode int, body []byte, err error) {
 	for i := 0; i < retry; i++ {
 		statusCode, body, err = u.byte()
 		if err != nil {
-			if i == 3 {
-				switch {
-				case i == 0:
-					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
-				case i == 1:
-					time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
-				default:
-					time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
-				}
-			} else {
-				time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
-			}
+			//if i == 3 {
+			//	switch {
+			//	case i == 0:
+			//		time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+			//	case i == 1:
+			//		time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+			//	default:
+			//		time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+			//	}
+			//} else {
+			//	time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+			//}
 			continue
 		}
 		return statusCode, body, err
