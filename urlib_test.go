@@ -3,6 +3,7 @@ package urllib
 import (
 	"log"
 	"testing"
+	"time"
 )
 
 //func TestLib(t *testing.T) {
@@ -306,4 +307,13 @@ func TestF(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		log.Println(i)
 	}
+}
+
+
+func TestP(t *testing.T) {
+	body, err := Get("http://www.jc001.cn/ad_go.php?url=http%3A%2F%2Fzs.jiuzheng.com%2Fstore-1828111&t=1608873179&k=a22d0095144d835e6335c3b8cd75b08f").SetTimeout(time.Duration(3000) * time.Millisecond).Body()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	log.Println(body)
 }
