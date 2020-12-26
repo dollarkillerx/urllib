@@ -404,6 +404,8 @@ func (u *Urllib) body() (*http.Response, error) {
 		u.config.Transport = &http.Transport{
 			TLSClientConfig: u.config.TLSClientConfig,
 			Proxy:           u.config.Proxy,
+			TLSHandshakeTimeout: u.config.ConnectTimeout,
+			DisableKeepAlives: true,
 			//Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
 		}
