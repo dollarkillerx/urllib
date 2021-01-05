@@ -427,7 +427,6 @@ func (u *Urllib) byte() (int, []byte, error) {
 			}
 			all = append(all, line...)
 		}
-
 	} else {
 		all, err = ioutil.ReadAll(body.Body)
 		if err != nil {

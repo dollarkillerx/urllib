@@ -23,7 +23,7 @@ import (
 //}
 
 func TestRedirect(t *testing.T) {
-	get, body, err := fasthttp.Get(nil, "http://127.0.0.1:8986/t")
+	get, body, err := fasthttp.Get(nil, "http://www.baidu.com")
 	if err != nil {
 		log.Println(err)
 		return
