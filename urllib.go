@@ -540,21 +540,40 @@ func (u *Urllib) ByteRetry(retry int, code int) (statusCode int, body []byte, er
 	}
 	for i := 0; i < retry; i++ {
 		statusCode, body, err = u.byte()
-		if err != nil || statusCode != code {
-			if i == 3 {
-				switch {
-				case i == 0:
+		if code == 0 {
+			if err != nil {
+				if i == 3 {
+					switch {
+					case i == 0:
+						time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+					case i == 1:
+						time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+					default:
+						time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+					}
+				} else {
 					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
-				case i == 1:
-					time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
-				default:
-					time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
 				}
-			} else {
-				time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+				continue
 			}
-			continue
+		} else {
+			if err != nil || statusCode != code {
+				if i == 3 {
+					switch {
+					case i == 0:
+						time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+					case i == 1:
+						time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+					default:
+						time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+					}
+				} else {
+					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+				}
+				continue
+			}
 		}
+
 		return statusCode, body, err
 	}
 	return statusCode, body, err
