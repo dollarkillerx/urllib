@@ -31,4 +31,10 @@ func TestSendIp(t *testing.T) {
 		log.Fatalln(err)
 	}
 	ioutil.WriteFile("ip.html",bytes,00666)
+
+	_, bytes, err = urllib.Get("https://www.ez2o.com/App/Net/IP").DisguisedIP("1.1.1.1").Byte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	ioutil.WriteFile("ip2.html",bytes,00666)
 }

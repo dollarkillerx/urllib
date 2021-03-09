@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/dollarkillerx/urllib"
 	"log"
+
+	"github.com/dollarkillerx/urllib"
 )
 
 func main() {

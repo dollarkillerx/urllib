@@ -2,7 +2,6 @@ package urllib
 
 import (
 	"bytes"
-	"github.com/dollarkillerx/urllib/lib"
 	"io"
 	"log"
 	"os"
@@ -18,6 +17,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+
+	"github.com/dollarkillerx/urllib/lib"
 )
 
 func Get(url string) *Urllib {
@@ -54,6 +55,8 @@ type Urllib struct {
 	files  map[string]string
 	config Config
 
+	disableKeepAlives bool
+
 	err error
 }
 
@@ -89,6 +92,7 @@ func getBase(tagUrl, method string) *Urllib {
 		err:    err,
 		config: defaultConfig,
 		resp:   &resp,
+		disableKeepAlives: true,
 	}
 
 	base.req = &http.Request{
@@ -413,6 +417,11 @@ func (u *Urllib) basicRules() {
 		u.SetHeader("Transfer-Encoding", "chunked")
 		return
 	}
+}
+
+func (u *Urllib) KeepAlives() *Urllib {
+	u.disableKeepAlives = false
+	return u
 }
 
 func (u *Urllib) body() (*http.Response, error) {
