@@ -2,21 +2,20 @@ package urllib
 
 import (
 	"bytes"
-	"io"
-	"log"
-	"os"
-	"strings"
-	"sync"
-	"time"
-
 	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
+	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"os"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/dollarkillerx/urllib/lib"
 )
@@ -61,22 +60,20 @@ type Urllib struct {
 }
 
 type Config struct {
-	UserAgent        string
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-	TLSClientConfig  *tls.Config
-	Proxy            func(*http.Request) (*url.URL, error)
-	Transport        http.RoundTripper
-	CheckRedirect    func(req *http.Request, via []*http.Request) error
-	Gzip             bool
-	Debug            bool
+	UserAgent       string
+	ConnectTimeout  time.Duration
+	TLSClientConfig *tls.Config
+	Proxy           func(*http.Request) (*url.URL, error)
+	Transport       http.RoundTripper
+	CheckRedirect   func(req *http.Request, via []*http.Request) error
+	Gzip            bool
+	Debug           bool
 }
 
 var defaultConfig = Config{
-	UserAgent:        "Urllib Gold",
-	ConnectTimeout:   30 * time.Second,
-	ReadWriteTimeout: 30 * time.Second,
-	Gzip:             false,
+	UserAgent:      "Urllib Gold",
+	ConnectTimeout: 30 * time.Second,
+	Gzip:           false,
 }
 
 func getBase(tagUrl, method string) *Urllib {
@@ -85,13 +82,13 @@ func getBase(tagUrl, method string) *Urllib {
 	u, err := url.Parse(tagUrl)
 
 	base := &Urllib{
-		params: map[string][]string{},
-		querys: map[string][]string{},
-		files:  map[string]string{},
-		url:    tagUrl,
-		err:    err,
-		config: defaultConfig,
-		resp:   &resp,
+		params:            map[string][]string{},
+		querys:            map[string][]string{},
+		files:             map[string]string{},
+		url:               tagUrl,
+		err:               err,
+		config:            defaultConfig,
+		resp:              &resp,
 		disableKeepAlives: true,
 	}
 
@@ -102,6 +99,7 @@ func getBase(tagUrl, method string) *Urllib {
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
 		ProtoMinor: 1,
+		Close:      true,
 	}
 
 	base.SetUserAgent(base.config.UserAgent)
@@ -180,23 +178,6 @@ func (u *Urllib) SetTimeout(timeout time.Duration) *Urllib {
 		timeout = timeout * time.Second
 	}
 	u.config.ConnectTimeout = timeout
-	u.config.ReadWriteTimeout = timeout
-	return u
-}
-
-func (u *Urllib) SetConnectTimeout(timeout time.Duration) *Urllib {
-	if timeout < 10 {
-		timeout = timeout * time.Second
-	}
-	u.config.ConnectTimeout = timeout
-	return u
-}
-
-func (u *Urllib) SetReadWriteTimeout(timeout time.Duration) *Urllib {
-	if timeout < 10 {
-		timeout = timeout * time.Second
-	}
-	u.config.ReadWriteTimeout = timeout
 	return u
 }
 
@@ -335,7 +316,7 @@ func (u *Urllib) Debug() *Urllib {
 	return u
 }
 
-func (u *Urllib)DisguisedIP(ip string) *Urllib {
+func (u *Urllib) DisguisedIP(ip string) *Urllib {
 	u.SetHeaderMap(map[string]string{
 		"X-Forwarded-For":  ip,
 		"X-Forwarded-Host": ip,
@@ -431,7 +412,9 @@ func (u *Urllib) body() (*http.Response, error) {
 		u.config.Transport = &http.Transport{
 			TLSClientConfig:     u.config.TLSClientConfig,
 			Proxy:               u.config.Proxy,
-			Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
+			TLSHandshakeTimeout: u.config.ConnectTimeout,
+			DisableKeepAlives:   u.disableKeepAlives,
+			//Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
 		}
 	} else {
@@ -442,9 +425,9 @@ func (u *Urllib) body() (*http.Response, error) {
 			if t.Proxy == nil {
 				t.Proxy = u.config.Proxy
 			}
-			if t.Dial == nil {
-				t.Dial = lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout)
-			}
+			//if t.Dial == nil {
+			//	t.Dial = lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout)
+			//}
 		}
 	}
 
@@ -454,6 +437,7 @@ func (u *Urllib) body() (*http.Response, error) {
 	client := http.Client{
 		Transport: u.config.Transport,
 		Jar:       jar,
+		Timeout:   u.config.ConnectTimeout,
 	}
 
 	if u.config.CheckRedirect != nil {
@@ -473,6 +457,27 @@ func (u *Urllib) body() (*http.Response, error) {
 	}
 
 	return client.Do(u.req)
+}
+
+func (u *Urllib) byteOriginal() (int, []byte, error) {
+	body, err := u.body()
+	if err != nil {
+		if u.config.Debug {
+			log.Println(err)
+		}
+		return 0, nil, err
+	}
+	defer body.Body.Close()
+
+	all, err := ioutil.ReadAll(body.Body)
+	if err != nil {
+		if u.config.Debug {
+			log.Println(err)
+		}
+		return 0, nil, err
+	}
+
+	return body.StatusCode, all, nil
 }
 
 func (u *Urllib) byte() (int, []byte, error) {
@@ -526,8 +531,13 @@ func (u *Urllib) byte() (int, []byte, error) {
 func (u *Urllib) Body() (*http.Response, error) {
 	return u.body()
 }
+
 func (u *Urllib) Byte() (int, []byte, error) {
 	return u.byte()
+}
+
+func (u *Urllib) ByteOriginal() (int, []byte, error) {
+	return u.byteOriginal()
 }
 
 // 拥有重尝 版本
@@ -558,31 +568,96 @@ func (u *Urllib) BodyRetry(retry int) (body *http.Response, err error) {
 	return body, err
 }
 
-func (u *Urllib) ByteRetry(retry int) (statusCode int, body []byte, err error) {
+func (u *Urllib) ByteOriginalRetry(retry int, code int) (statusCode int, body []byte, err error) {
+	if retry == 0 {
+		retry = 3
+	}
+	for i := 0; i < retry; i++ {
+		statusCode, body, err = u.byteOriginal()
+		if code == 0 {
+			if err != nil {
+				if i == 3 {
+					switch {
+					case i == 0:
+						time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+					case i == 1:
+						time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+					default:
+						time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+					}
+				} else {
+					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+				}
+				continue
+			}
+		} else {
+			if err != nil || statusCode != code {
+				if i == 3 {
+					switch {
+					case i == 0:
+						time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+					case i == 1:
+						time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+					default:
+						time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+					}
+				} else {
+					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+				}
+				continue
+			}
+		}
+
+		return statusCode, body, err
+	}
+	return statusCode, body, err
+}
+
+func (u *Urllib) ByteRetry(retry int, code int) (statusCode int, body []byte, err error) {
 	if retry == 0 {
 		retry = 3
 	}
 	for i := 0; i < retry; i++ {
 		statusCode, body, err = u.byte()
-		if err != nil {
-			if i == 3 {
-				switch {
-				case i == 0:
+		if code == 0 {
+			if err != nil {
+				if i == 3 {
+					switch {
+					case i == 0:
+						time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+					case i == 1:
+						time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+					default:
+						time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+					}
+				} else {
 					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
-				case i == 1:
-					time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
-				default:
-					time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
 				}
-			} else {
-				time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+				continue
 			}
-			continue
+		} else {
+			if err != nil || statusCode != code {
+				if i == 3 {
+					switch {
+					case i == 0:
+						time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+					case i == 1:
+						time.Sleep(time.Second * time.Duration(lib.Random(8, 10)))
+					default:
+						time.Sleep(time.Second * time.Duration(lib.Random(10, 20)))
+					}
+				} else {
+					time.Sleep(time.Second * time.Duration(lib.Random(1, 5)))
+				}
+				continue
+			}
 		}
+
 		return statusCode, body, err
 	}
 	return statusCode, body, err
 }
+
 
 var globalCookie http.CookieJar
 var cookieMutex sync.Mutex
