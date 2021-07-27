@@ -408,14 +408,19 @@ func (u *Urllib) KeepAlives() *Urllib {
 func (u *Urllib) body() (*http.Response, error) {
 	u.basicRules()
 
+	if u.config.Proxy == nil {
+		u.config.Proxy = http.ProxyFromEnvironment
+	}
+
 	if u.config.Transport == nil {
+
 		u.config.Transport = &http.Transport{
 			TLSClientConfig:     u.config.TLSClientConfig,
-			Proxy:               u.config.Proxy,
 			TLSHandshakeTimeout: u.config.ConnectTimeout,
 			DisableKeepAlives:   u.disableKeepAlives,
-			//Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
+			Proxy:               u.config.Proxy,
+			//Dial:                lib.SetTimeoutDialer(u.config.ConnectTimeout, u.config.ReadWriteTimeout),
 		}
 	} else {
 		if t, ok := u.config.Transport.(*http.Transport); ok {
@@ -657,7 +662,6 @@ func (u *Urllib) ByteRetry(retry int, code int) (statusCode int, body []byte, er
 	}
 	return statusCode, body, err
 }
-
 
 var globalCookie http.CookieJar
 var cookieMutex sync.Mutex
