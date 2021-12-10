@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -677,4 +678,17 @@ func initCookie() {
 		}
 		log.Println(err)
 	}
+}
+
+func (u *Urllib) FromJson(r interface{}) error {
+	statusCode, body, err := u.byte()
+	if err != nil {
+		return err
+	}
+
+	if statusCode != 200 {
+		return errors.New(string(body))
+	}
+
+	return json.Unmarshal(body, r)
 }
