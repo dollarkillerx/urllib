@@ -692,3 +692,16 @@ func (u *Urllib) FromJson(r interface{}) error {
 
 	return json.Unmarshal(body, r)
 }
+
+func (u *Urllib) FromJsonByCode(r interface{}, code int) error {
+	statusCode, body, err := u.byte()
+	if err != nil {
+		return err
+	}
+
+	if statusCode != code {
+		return errors.New(string(body))
+	}
+
+	return json.Unmarshal(body, r)
+}
