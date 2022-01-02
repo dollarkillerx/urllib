@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -364,6 +365,10 @@ func (u *Urllib) basicRules() {
 		u.setFormParams(u.params)
 		u.SetHeader("Content-Type", "application/x-www-form-urlencoded")
 		return
+	}
+
+	if u.config.Debug {
+		fmt.Println("Url: ", u.req.URL)
 	}
 
 	if len(u.files) > 0 {
