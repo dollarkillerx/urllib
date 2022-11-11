@@ -691,11 +691,13 @@ func (u *Urllib) FromJson(r interface{}) error {
 		return err
 	}
 
+	json.Unmarshal(body, r)
+
 	if statusCode != 200 {
 		return errors.New(string(body))
 	}
 
-	return json.Unmarshal(body, r)
+	return nil
 }
 
 func (u *Urllib) FromJsonByCode(r interface{}, code int) error {
